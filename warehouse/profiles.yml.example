@@ -1,0 +1,13 @@
+dadayu:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: dadayu
+      host: dadayu_clickhouse   # use 'localhost' when running dbt outside Docker
+      port: 8123
+      user: dadayu
+      password: changeme        # replace with actual password from .env
+      secure: false
+      connect_timeout: 10
+      send_receive_timeout: 300

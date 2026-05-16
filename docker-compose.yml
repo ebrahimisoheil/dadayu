@@ -29,5 +29,19 @@ services:
       - dadayu_clickhouse
     command: uvicorn api:app --host 0.0.0.0 --port 8000
 
+  dadayu_dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbt
+    container_name: dadayu_dbt
+    volumes:
+      - ./warehouse:/usr/app/dbt
+      - ~/.dbt:/root/.dbt:ro
+    working_dir: /usr/app/dbt
+    depends_on:
+      - dadayu_clickhouse
+    profiles:
+      - tools
+
 volumes:
   dadayu_ch_data:

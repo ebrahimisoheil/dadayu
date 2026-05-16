@@ -1,0 +1,47 @@
+name: dadayu_warehouse
+version: '1.0.0'
+config-version: 2
+
+profile: dadayu
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+docs-paths: ["docs"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  dadayu_warehouse:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      reference:
+        +materialized: table
+        +engine: ReplacingMergeTree()
+      markets:
+        +materialized: view
+      indicators:
+        +materialized: view
+
+seeds:
+  dadayu_warehouse:
+    trading_calendar:
+      +column_types:
+        is_trading_day: UInt8
+    gics_hierarchy:
+      +column_types:
+        sector_id: String
+        industry_group_id: String
+        industry_id: String
+        sub_industry_id: String
+
+snapshots:
+  dadayu_warehouse:
+    +target_schema: dadayu
