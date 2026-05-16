@@ -5,12 +5,13 @@ WITH snapshot AS (
 ),
 
 gics AS (
-    SELECT DISTINCT
+    SELECT
         sector_name,
-        sector_id,
-        industry_group_id,
-        industry_group_name
+        any(sector_id)             AS sector_id,
+        any(industry_group_id)     AS industry_group_id,
+        any(industry_group_name)   AS industry_group_name
     FROM {{ ref('gics_hierarchy') }}
+    GROUP BY sector_name
 )
 
 SELECT

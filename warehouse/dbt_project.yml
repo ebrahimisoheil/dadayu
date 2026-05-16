@@ -23,8 +23,7 @@ models:
       +materialized: view
     marts:
       reference:
-        +materialized: table
-        +engine: ReplacingMergeTree()
+        +materialized: view
       markets:
         +materialized: view
       indicators:
