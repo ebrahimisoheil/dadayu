@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: dim_equity_symbol
+    columns:
+      - name: equity_id
+        tests: [not_null, unique]
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['germany', 'us', 'india']
+
+  - name: dim_calendar
+    columns:
+      - name: date
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: session_id
+        tests: [not_null, unique]

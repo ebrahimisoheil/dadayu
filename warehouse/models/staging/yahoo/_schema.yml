@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_yahoo__ohlcv_1h
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+      - name: volume
+        tests: [not_null]
+
+  - name: stg_yahoo__ohlcv_4h
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+
+  - name: stg_yahoo__ohlcv_1d
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+
+  - name: stg_yahoo__ticker_info
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['germany', 'us', 'india']
