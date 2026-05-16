@@ -82,3 +82,50 @@ def fetch_ticker_info(market: str = "all"):
     if result.returncode != 0:
         raise HTTPException(status_code=500, detail=out)
     return out
+
+
+@app.post("/run/fetch-crypto-prices")
+def fetch_crypto_prices(
+    interval: str = "1d",
+    from_date: str | None = None,
+    to_date: str | None = None,
+):
+    """Fetch crypto OHLCV for top-20 assets → ClickHouse.
+
+    - interval: 1h | 4h | 1d (default: 1d)
+    - from_date / to_date: YYYY-MM-DD (default: last calendar month)
+    """
+    if interval not in VALID_INTERVALS:
+        raise HTTPException(status_code=400, detail=f"interval must be one of {VALID_INTERVALS}")
+
+    args = ["--interval", interval]
+    if from_date:
+        args += ["--start", from_date]
+    if to_date:
+        args += ["--end", to_date]
+
+    cmd = [sys.executable, str(HERE / "fetch_crypto_prices.py")] + args
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE))
+    out = {
+        "returncode": result.returncode,
+        "stdout": result.stdout[-4000:] if result.stdout else "",
+        "stderr": result.stderr[-2000:] if result.stderr else "",
+    }
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=out)
+    return out
+
+
+@app.post("/run/fetch-crypto-info")
+def fetch_crypto_info():
+    """Fetch CoinGecko metadata → ClickHouse crypto_metadata."""
+    cmd = [sys.executable, str(HERE / "fetch_crypto_info.py")]
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE))
+    out = {
+        "returncode": result.returncode,
+        "stdout": result.stdout[-4000:] if result.stdout else "",
+        "stderr": result.stderr[-2000:] if result.stderr else "",
+    }
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=out)
+    return out
