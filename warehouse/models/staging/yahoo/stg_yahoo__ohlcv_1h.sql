@@ -1,5 +1,5 @@
 WITH source AS (
-    SELECT * FROM {{ source('yahoo', 'prices_hourly') }}
+    SELECT * FROM {{ source('yahoo', 'prices_hourly') }} FINAL
 )
 
 SELECT
