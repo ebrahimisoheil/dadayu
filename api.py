@@ -61,3 +61,24 @@ def fetch_prices(
     if result["returncode"] != 0:
         raise HTTPException(status_code=500, detail=result)
     return result
+
+
+@app.post("/run/fetch-ticker-info")
+def fetch_ticker_info(market: str = "all"):
+    """Fetch yfinance metadata and append to ClickHouse tickers table.
+
+    - market: germany | us | india | all (default: all)
+    """
+    if market not in VALID_MARKETS:
+        raise HTTPException(status_code=400, detail=f"market must be one of {VALID_MARKETS}")
+
+    cmd = [sys.executable, str(HERE / "fetch_ticker_info.py"), "--market", market]
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE))
+    out = {
+        "returncode": result.returncode,
+        "stdout": result.stdout[-4000:] if result.stdout else "",
+        "stderr": result.stderr[-2000:] if result.stderr else "",
+    }
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=out)
+    return out
