@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS crypto_prices_hourly
     ingested_at DateTime DEFAULT now()
 )
 ENGINE = ReplacingMergeTree(ingested_at)
-ORDER BY (ticker, datetime)
+ORDER BY (market, ticker, datetime)
 PARTITION BY toYYYYMM(datetime);
 
 
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS crypto_prices_4h
     ingested_at DateTime DEFAULT now()
 )
 ENGINE = ReplacingMergeTree(ingested_at)
-ORDER BY (ticker, datetime)
+ORDER BY (market, ticker, datetime)
 PARTITION BY toYYYYMM(datetime);
 
 
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS crypto_prices_daily
     ingested_at DateTime DEFAULT now()
 )
 ENGINE = ReplacingMergeTree(ingested_at)
-ORDER BY (ticker, date)
+ORDER BY (market, ticker, date)
 PARTITION BY toYYYYMM(date);
 
 
