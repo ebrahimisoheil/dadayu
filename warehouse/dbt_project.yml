@@ -19,6 +19,8 @@ models:
   dadayu_warehouse:
     staging:
       +materialized: view
+      coingecko:
+        +materialized: view
     intermediate:
       +materialized: view
     marts:
@@ -40,6 +42,12 @@ seeds:
         industry_group_id: String
         industry_id: String
         sub_industry_id: String
+    crypto_universe:
+      +column_types:
+        symbol: String
+        coingecko_id: String
+        name: String
+        category: String
 
 snapshots:
   dadayu_warehouse:

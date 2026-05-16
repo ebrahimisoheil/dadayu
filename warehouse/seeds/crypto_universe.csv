@@ -1,0 +1,21 @@
+symbol,coingecko_id,name,category
+BTC-USD,bitcoin,Bitcoin,Layer 1
+ETH-USD,ethereum,Ethereum,Layer 1
+BNB-USD,binancecoin,BNB,Exchange
+SOL-USD,solana,Solana,Layer 1
+XRP-USD,ripple,XRP,Payments
+ADA-USD,cardano,Cardano,Layer 1
+AVAX-USD,avalanche-2,Avalanche,Layer 1
+DOGE-USD,dogecoin,Dogecoin,Meme
+TRX-USD,tron,TRON,Layer 1
+LINK-USD,chainlink,Chainlink,Oracle
+DOT-USD,polkadot,Polkadot,Layer 0
+MATIC-USD,matic-network,Polygon,Layer 2
+LTC-USD,litecoin,Litecoin,Payments
+BCH-USD,bitcoin-cash,Bitcoin Cash,Payments
+UNI7083-USD,uniswap,Uniswap,DeFi
+ATOM-USD,cosmos,Cosmos,Layer 0
+XLM-USD,stellar,Stellar,Payments
+NEAR-USD,near,NEAR Protocol,Layer 1
+ICP-USD,internet-computer,Internet Computer,Layer 1
+FIL-USD,filecoin,Filecoin,Storage
