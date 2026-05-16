@@ -28,3 +28,24 @@ sources:
 
       - name: tickers
         description: Equity metadata from yfinance .info — append-only, deduped via FINAL
+
+      - name: crypto_prices_hourly
+        description: 1h crypto OHLCV ingested from yfinance
+        freshness:
+          warn_after: {count: 3, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: ingested_at
+
+      - name: crypto_prices_4h
+        description: 4h crypto OHLCV ingested from yfinance
+        freshness:
+          warn_after: {count: 3, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: ingested_at
+
+      - name: crypto_prices_daily
+        description: Daily crypto OHLCV ingested from yfinance
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 4, period: day}
+        loaded_at_field: ingested_at
