@@ -3,14 +3,14 @@
 {% endmacro %}
 
 {% macro macd_signal(ema_fast_col, ema_slow_col, signal_n) %}
-    {# Signal = EMA of MACD line; computed via arrayFold over the window #}
+    {# EMA of MACD line — same unbounded-preceding pattern as ema macro #}
     arrayFold(
-        (acc, x) -> acc + (2.0 / ({{ signal_n }} + 1)) * (x - acc),
+        (acc, x) -> if(acc < -1e15, x, acc + (2.0 / ({{ signal_n }} + 1)) * (x - acc)),
         groupArray({{ ema_fast_col }} - {{ ema_slow_col }}) OVER (
             PARTITION BY ticker, market ORDER BY ts
-            ROWS BETWEEN {{ signal_n - 1 }} PRECEDING AND CURRENT ROW
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ),
-        toFloat64(0)
+        toFloat64(-1e16)
     )
 {% endmacro %}
 

@@ -1,12 +1,16 @@
 {% macro ema(col, n) %}
-    {# ClickHouse has no native EMA window function; use arrayFold over grouped array then rejoin #}
+    {#
+      True EMA seeded from first available price (sentinel -1 triggers init).
+      Uses UNBOUNDED PRECEDING so the accumulator carries forward from bar 1,
+      not from 0 over a fixed N-row window.
+      Multiplier k = 2 / (n + 1).
+    #}
     arrayFold(
-        (acc, x) -> acc + (2.0 / ({{ n }} + 1)) * (x - acc),
+        (acc, x) -> if(acc < 0, x, acc + (2.0 / ({{ n }} + 1)) * (x - acc)),
         groupArray({{ col }}) OVER (
-            PARTITION BY ticker, market
-            ORDER BY ts
-            ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
+            PARTITION BY ticker, market ORDER BY ts
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ),
-        toFloat64(0)
+        toFloat64(-1)
     )
 {% endmacro %}
