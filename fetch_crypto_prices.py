@@ -44,6 +44,19 @@ def load_symbols() -> list[str]:
         return [row["symbol"] for row in csv.DictReader(f)]
 
 
+def get_watermark(client: clickhouse_connect.driver.Client, interval: str) -> str | None:
+    table = INTERVAL_TABLE[interval]
+    date_col = "date" if interval == "1d" else "datetime"
+    try:
+        result = client.query(f"SELECT max({date_col}) FROM {table}")
+        val = result.result_rows[0][0]
+        if val is None:
+            return None
+        return (pd.Timestamp(val) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    except Exception:
+        return None
+
+
 def download_prices(symbols: list[str], start: str, end: str, interval: str) -> pd.DataFrame:
     print(f"  Downloading {interval} data {start} → {end} for {len(symbols)} symbols...")
     end_exclusive = (pd.Timestamp(end) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
@@ -147,9 +160,21 @@ def main() -> None:
     parser.add_argument("--end",   help="End date YYYY-MM-DD")
     args = parser.parse_args()
 
-    default_start, default_end = last_month_range()
-    start = args.start or default_start
-    end   = args.end   or default_end
+    today = pd.Timestamp.today().strftime("%Y-%m-%d")
+
+    if args.start:
+        start = args.start
+    else:
+        client_wm = get_ch_client()
+        watermark = get_watermark(client_wm, args.interval)
+        if watermark:
+            start = watermark
+            print(f"  Watermark: resuming from {start}")
+        else:
+            start, _ = last_month_range()
+            print(f"  No watermark — defaulting to {start}")
+
+    end = args.end or today
 
     print(f"\n=== CRYPTO | {args.interval} | {start} → {end} ===")
     symbols = load_symbols()
