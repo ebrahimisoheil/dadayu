@@ -284,6 +284,23 @@ def last_month_range() -> tuple[str, str]:
     return last_month_start.strftime("%Y-%m-%d"), last_month_end.strftime("%Y-%m-%d")
 
 
+def get_watermark(client: clickhouse_connect.driver.Client, interval: str, market: str) -> str | None:
+    table = INTERVAL_TABLE[interval]
+    date_col = "date" if interval == "1d" else "datetime"
+    try:
+        result = client.query(
+            f"SELECT max({date_col}) FROM {table} WHERE market = {{market:String}}",
+            parameters={"market": market},
+        )
+        val = result.result_rows[0][0]
+        if val is None:
+            return None
+        return (pd.Timestamp(val) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    except Exception as exc:
+        print(f"  [WARN] Watermark query failed for {market}: {exc}")
+        return None
+
+
 def fetch_market(market: str, start: str, end: str, interval: str) -> None:
     print(f"\n=== {market.upper()} | {interval} | {start} → {end} ===")
     tickers = get_tickers(market)
@@ -309,14 +326,29 @@ def main() -> None:
     parser.add_argument("--end",   help="End date YYYY-MM-DD (default: last day of last month)")
     args = parser.parse_args()
 
-    default_start, default_end = last_month_range()
-    start = args.start or default_start
-    end   = args.end   or default_end
+    today = pd.Timestamp.today().strftime("%Y-%m-%d")
+    explicit_start = args.start
+    explicit_end = args.end
 
     markets = MARKETS if args.market == "all" else [args.market]
+    client = get_ch_client()
+
     for market in markets:
+        if explicit_start:
+            start = explicit_start
+        else:
+            watermark = get_watermark(client, args.interval, market)
+            if watermark:
+                start = watermark
+                print(f"  [{market}] Watermark: resuming from {start}")
+            else:
+                start, _ = last_month_range()
+                print(f"  [{market}] No watermark — defaulting to {start}")
+
+        end = explicit_end or today
         fetch_market(market, start, end, interval=args.interval)
 
+    client.close()
     print("\nDone.")
 
 
