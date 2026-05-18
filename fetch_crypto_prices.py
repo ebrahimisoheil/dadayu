@@ -53,7 +53,8 @@ def get_watermark(client: clickhouse_connect.driver.Client, interval: str) -> st
         if val is None:
             return None
         return (pd.Timestamp(val) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-    except Exception:
+    except Exception as exc:
+        print(f"  [WARN] Watermark query failed: {exc}")
         return None
 
 
@@ -161,12 +162,12 @@ def main() -> None:
     args = parser.parse_args()
 
     today = pd.Timestamp.today().strftime("%Y-%m-%d")
+    client = get_ch_client()
 
     if args.start:
         start = args.start
     else:
-        client_wm = get_ch_client()
-        watermark = get_watermark(client_wm, args.interval)
+        watermark = get_watermark(client, args.interval)
         if watermark:
             start = watermark
             print(f"  Watermark: resuming from {start}")
@@ -185,7 +186,6 @@ def main() -> None:
         print("  [ERROR] No data — aborting.")
         return
 
-    client = get_ch_client()
     insert_prices(client, prices, args.interval)
     print("\nDone.")
 
