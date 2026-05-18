@@ -24,3 +24,4 @@ def test_get_ch_client_returns_client(monkeypatch):
     assert calls[0]["host"] == "localhost"
     assert calls[0]["port"] == 8123
     assert calls[0]["database"] == "dadayu"
+    assert calls[0]["username"] == "dadayu"
