@@ -17,7 +17,7 @@ SELECT
     s.market_cap,
     s.category,
     s.chain,
-    u.coingecko_id,
+    u.symbol        AS yf_symbol,
     s.fetched_at
 FROM snapshot AS s
 LEFT JOIN universe AS u ON s.coin_id = u.coingecko_id

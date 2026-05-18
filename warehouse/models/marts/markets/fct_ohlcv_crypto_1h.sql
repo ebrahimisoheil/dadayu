@@ -3,13 +3,8 @@ WITH ohlcv AS (
 ),
 
 dim AS (
-    SELECT
-        u.symbol     AS yf_symbol,
-        d.name,
-        d.category,
-        d.market_rank
-    FROM {{ ref('dim_crypto_symbol') }} AS d
-    JOIN {{ ref('crypto_universe') }} AS u ON d.coin_id = u.coingecko_id
+    SELECT yf_symbol, name, category, market_rank
+    FROM {{ ref('dim_crypto_symbol') }}
 )
 
 SELECT

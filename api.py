@@ -105,7 +105,7 @@ def fetch_crypto_prices(
         args += ["--end", to_date]
 
     cmd = [sys.executable, str(HERE / "fetch_crypto_prices.py")] + args
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE))
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE), timeout=600)
     out = {
         "returncode": result.returncode,
         "stdout": result.stdout[-4000:] if result.stdout else "",
@@ -120,7 +120,7 @@ def fetch_crypto_prices(
 def fetch_crypto_info():
     """Fetch CoinGecko metadata → ClickHouse crypto_metadata."""
     cmd = [sys.executable, str(HERE / "fetch_crypto_info.py")]
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE))
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(HERE), timeout=600)
     out = {
         "returncode": result.returncode,
         "stdout": result.stdout[-4000:] if result.stdout else "",

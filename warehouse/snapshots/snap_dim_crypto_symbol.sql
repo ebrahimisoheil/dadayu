@@ -4,7 +4,7 @@
     target_schema='dadayu',
     unique_key='coin_id',
     strategy='check',
-    check_cols=['market_rank', 'market_cap', 'category']
+    check_cols=['market_rank', 'category']
 ) }}
 
 SELECT

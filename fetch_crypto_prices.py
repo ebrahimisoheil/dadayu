@@ -123,7 +123,7 @@ def insert_prices(client: clickhouse_connect.driver.Client, prices: pd.DataFrame
         df["_ym"] = df["datetime"].dt.to_period("M")
 
     df = df[[c for c in cols if c in df.columns] + ["_ym"]].dropna(subset=["close"])
-    df["volume"] = df["volume"].fillna(0).astype(int)
+    df["volume"] = df["volume"].fillna(0).clip(lower=0).astype(int)
 
     total = 0
     for _, chunk in df.groupby("_ym"):
