@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: dim_equity_symbol
+    columns:
+      - name: equity_id
+        data_tests: [not_null, unique]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['germany', 'us', 'india']

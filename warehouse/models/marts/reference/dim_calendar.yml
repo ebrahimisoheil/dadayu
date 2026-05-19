@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: dim_calendar
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: session_id
+        data_tests: [not_null, unique]

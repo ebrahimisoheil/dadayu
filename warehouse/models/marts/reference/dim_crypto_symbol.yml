@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: dim_crypto_symbol
+    columns:
+      - name: coin_id
+        data_tests: [not_null, unique]
+      - name: symbol
+        data_tests: [not_null]
+      - name: yf_symbol
+        data_tests: [not_null]
