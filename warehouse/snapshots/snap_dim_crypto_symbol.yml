@@ -2,8 +2,11 @@ version: 2
 
 snapshots:
   - name: snap_dim_crypto_symbol
+    description: SCD Type 2 snapshot of crypto metadata — tracks market_rank and category changes over time
     columns:
       - name: coin_id
+        description: CoinGecko asset ID (e.g. bitcoin, ethereum)
         data_tests: [not_null]
       - name: symbol
+        description: Lowercase exchange symbol (e.g. btc, eth)
         data_tests: [not_null]

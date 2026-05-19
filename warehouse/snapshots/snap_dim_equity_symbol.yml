@@ -2,10 +2,14 @@ version: 2
 
 snapshots:
   - name: snap_dim_equity_symbol
+    description: SCD Type 2 snapshot of equity ticker metadata — tracks changes over time
     columns:
       - name: equity_id
+        description: Surrogate key — hash of ticker and market
         data_tests: [not_null]
       - name: ticker
+        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
         data_tests: [not_null]
       - name: market
+        description: Market identifier — germany, us, or india
         data_tests: [not_null]

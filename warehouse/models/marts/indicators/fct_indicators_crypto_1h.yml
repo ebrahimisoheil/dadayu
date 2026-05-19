@@ -2,12 +2,37 @@ version: 2
 
 models:
   - name: fct_indicators_crypto_1h
+    description: 1h crypto technical indicators computed from fct_ohlcv_crypto_1h
     columns:
       - name: ticker
+        description: yfinance crypto symbol (e.g. BTC-USD, ETH-USD)
         data_tests: [not_null]
       - name: market
+        description: Always 'crypto'
         data_tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         data_tests: [not_null]
       - name: close
+        description: Closing price for the bar (USD)
         data_tests: [not_null]
+      - name: sma_20
+        description: Simple moving average over 20 bars
+      - name: ema_20
+        description: Exponential moving average over 20 bars
+      - name: rsi_14
+        description: Relative Strength Index (14-bar period); range 0–100
+      - name: macd_line
+        description: MACD line — EMA(12) minus EMA(26)
+      - name: macd_signal
+        description: MACD signal line — 9-bar EMA of the MACD line
+      - name: macd_hist
+        description: MACD histogram — MACD line minus signal line
+      - name: atr_14
+        description: Average True Range over 14 bars (volatility measure)
+      - name: bb_upper
+        description: Bollinger Band upper — SMA(20) plus 2 standard deviations
+      - name: bb_middle
+        description: Bollinger Band middle — SMA(20)
+      - name: bb_lower
+        description: Bollinger Band lower — SMA(20) minus 2 standard deviations
