@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: fct_ohlcv_crypto_1d
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+      - name: close
+        data_tests: [not_null]
