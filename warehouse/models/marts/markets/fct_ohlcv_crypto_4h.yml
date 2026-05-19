@@ -2,12 +2,33 @@ version: 2
 
 models:
   - name: fct_ohlcv_crypto_4h
+    description: 4h crypto OHLCV enriched with CoinGecko metadata
     columns:
       - name: ticker
+        description: yfinance crypto symbol (e.g. BTC-USD, ETH-USD)
         data_tests: [not_null]
       - name: market
+        description: Always 'crypto'
         data_tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         data_tests: [not_null]
+      - name: open
+        description: Opening price for the 4h bar (USD)
+      - name: high
+        description: Highest price during the 4h bar (USD)
+      - name: low
+        description: Lowest price during the 4h bar (USD)
       - name: close
+        description: Closing price for the 4h bar (USD)
         data_tests: [not_null]
+      - name: volume
+        description: Total units traded during the 4h bar
+      - name: name
+        description: Full cryptocurrency name (e.g. Bitcoin, Ethereum)
+      - name: category
+        description: Asset category (e.g. Layer 1, DeFi)
+      - name: market_rank
+        description: CoinGecko global market cap rank (1 = largest)
+      - name: return_pct
+        description: Bar-over-bar return ((close / prev_close) - 1); null on first bar per ticker

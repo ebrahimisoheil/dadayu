@@ -2,12 +2,33 @@ version: 2
 
 models:
   - name: fct_ohlcv_crypto_1d
+    description: Daily crypto OHLCV enriched with CoinGecko metadata
     columns:
       - name: ticker
+        description: yfinance crypto symbol (e.g. BTC-USD, ETH-USD)
         data_tests: [not_null]
       - name: market
+        description: Always 'crypto'
         data_tests: [not_null]
       - name: ts
+        description: Date cast to DateTime (midnight UTC)
         data_tests: [not_null]
+      - name: open
+        description: Opening price for the day (USD)
+      - name: high
+        description: Highest price during the day (USD)
+      - name: low
+        description: Lowest price during the day (USD)
       - name: close
+        description: Closing price for the day (USD)
         data_tests: [not_null]
+      - name: volume
+        description: Total units traded during the day
+      - name: name
+        description: Full cryptocurrency name (e.g. Bitcoin, Ethereum)
+      - name: category
+        description: Asset category (e.g. Layer 1, DeFi)
+      - name: market_rank
+        description: CoinGecko global market cap rank (1 = largest)
+      - name: return_pct
+        description: Day-over-day return ((close / prev_close) - 1); null on first day per ticker

@@ -2,12 +2,41 @@ version: 2
 
 models:
   - name: fct_ohlcv_4h
+    description: 4h equity OHLCV enriched with company metadata and calendar session info
     columns:
       - name: ticker
+        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
         data_tests: [not_null]
       - name: market
+        description: Market identifier — germany, us, or india
         data_tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         data_tests: [not_null]
+      - name: open
+        description: Opening price for the 4h bar
+      - name: high
+        description: Highest price during the 4h bar
+      - name: low
+        description: Lowest price during the 4h bar
       - name: close
+        description: Closing price for the 4h bar
         data_tests: [not_null]
+      - name: volume
+        description: Total shares traded during the 4h bar
+      - name: session_id
+        description: Unique session key — format MARKET_YYYYMMDD (e.g. US_20260519)
+      - name: is_trading_day
+        description: True if a regular trading session occurs on this date
+      - name: session_open_utc
+        description: Market open time in UTC
+      - name: session_close_utc
+        description: Market close time in UTC
+      - name: name
+        description: Full company name
+      - name: sector
+        description: GICS sector name (e.g. Technology, Financials)
+      - name: industry
+        description: GICS industry name within the sector
+      - name: return_pct
+        description: Bar-over-bar return ((close / prev_close) - 1); null on first bar per ticker
