@@ -2,10 +2,30 @@ version: 2
 
 models:
   - name: dim_calendar
+    description: Calendar dimension with trading session metadata — one row per market-date
     columns:
       - name: date
+        description: Calendar date
         data_tests: [not_null]
       - name: market
+        description: Market identifier — germany, us, or india
         data_tests: [not_null]
       - name: session_id
+        description: Unique session key — format MARKET_YYYYMMDD (e.g. US_20260519)
         data_tests: [not_null, unique]
+      - name: is_trading_day
+        description: True if a regular trading session occurs on this date
+      - name: session_open_utc
+        description: Market open time in UTC
+      - name: session_close_utc
+        description: Market close time in UTC
+      - name: year
+        description: Calendar year (e.g. 2026)
+      - name: month
+        description: Calendar month number (1–12)
+      - name: week_of_year
+        description: ISO week number within the year (1–53)
+      - name: day_of_week
+        description: Day of week number (1 = Monday, 7 = Sunday)
+      - name: day_name
+        description: Full day name (e.g. Monday, Tuesday)
