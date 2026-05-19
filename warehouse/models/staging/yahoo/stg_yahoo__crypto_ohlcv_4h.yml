@@ -5,12 +5,26 @@ models:
     description: 4h crypto OHLCV bars from ClickHouse crypto_prices_4h, deduped via FINAL
     columns:
       - name: ticker
+        description: yfinance crypto symbol (e.g. BTC-USD, ETH-USD)
         tests: [not_null]
       - name: market
+        description: Always 'crypto'
         tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
+        tests: [not_null]
+      - name: open
+        description: Opening price for the 4h bar (USD)
+        tests: [not_null]
+      - name: high
+        description: Highest price during the 4h bar (USD)
+        tests: [not_null]
+      - name: low
+        description: Lowest price during the 4h bar (USD)
         tests: [not_null]
       - name: close
+        description: Closing price for the 4h bar (USD)
         tests: [not_null]
       - name: volume
+        description: Total units traded during the 4h bar
         tests: [not_null]

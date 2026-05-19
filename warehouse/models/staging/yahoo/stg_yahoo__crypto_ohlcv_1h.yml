@@ -11,8 +11,20 @@ models:
         description: Always 'crypto'
         tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
+        tests: [not_null]
+      - name: open
+        description: Opening price for the 1h bar (USD)
+        tests: [not_null]
+      - name: high
+        description: Highest price during the 1h bar (USD)
+        tests: [not_null]
+      - name: low
+        description: Lowest price during the 1h bar (USD)
         tests: [not_null]
       - name: close
+        description: Closing price for the 1h bar (USD)
         tests: [not_null]
       - name: volume
+        description: Total units traded during the 1h bar
         tests: [not_null]

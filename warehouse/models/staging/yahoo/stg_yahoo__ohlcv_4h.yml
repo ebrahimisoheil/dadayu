@@ -5,18 +5,26 @@ models:
     description: 4h equity OHLCV bars from ClickHouse prices_4h, deduped via FINAL
     columns:
       - name: ticker
+        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
         tests: [not_null]
       - name: market
+        description: Market identifier — germany, us, or india
         tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         tests: [not_null]
       - name: open
+        description: Opening price for the 4h bar
         tests: [not_null]
       - name: high
+        description: Highest price during the 4h bar
         tests: [not_null]
       - name: low
+        description: Lowest price during the 4h bar
         tests: [not_null]
       - name: close
+        description: Closing price for the 4h bar
         tests: [not_null]
       - name: volume
+        description: Total shares/units traded during the 4h bar
         tests: [not_null]
