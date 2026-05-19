@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_yahoo__ohlcv_1h
+    description: 1h equity OHLCV bars from ClickHouse prices_hourly, deduped via FINAL
+    columns:
+      - name: ticker
+        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
+        tests: [not_null]
+      - name: market
+        description: Market identifier — germany, us, or india
+        tests: [not_null]
+      - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
+        tests: [not_null]
+      - name: open
+        tests: [not_null]
+      - name: high
+        tests: [not_null]
+      - name: low
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+      - name: volume
+        tests: [not_null]

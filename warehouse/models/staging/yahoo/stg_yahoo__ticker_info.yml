@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_yahoo__ticker_info
+    description: Equity metadata from yfinance .info — append-only, deduped via FINAL
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests:
+          - not_null
+          - accepted_values:
+              values: [germany, us, india]
+      - name: fetched_at
+        tests: [not_null]

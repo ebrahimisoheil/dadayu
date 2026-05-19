@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_yahoo__crypto_ohlcv_4h
+    description: 4h crypto OHLCV bars from ClickHouse crypto_prices_4h, deduped via FINAL
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+      - name: volume
+        tests: [not_null]

@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: stg_yahoo__ohlcv_1d
+    description: Daily equity OHLCV bars from ClickHouse prices_daily, deduped via FINAL
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        description: Date cast to DateTime (midnight UTC)
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+      - name: volume
+        tests: [not_null]
