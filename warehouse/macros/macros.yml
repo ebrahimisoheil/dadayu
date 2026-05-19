@@ -1,0 +1,128 @@
+version: 2
+
+macros:
+  - name: sma
+    arguments:
+      - name: col
+        type: string
+        description: Column name to aggregate
+      - name: "n"
+        type: int
+        description: Window size in bars
+
+  - name: ema
+    arguments:
+      - name: col
+        type: string
+        description: Column name to aggregate
+      - name: "n"
+        type: int
+        description: EMA period
+
+  - name: rsi
+    arguments:
+      - name: gain_col
+        type: string
+        description: Pre-computed gain column (greatest(close - prev_close, 0))
+      - name: loss_col
+        type: string
+        description: Pre-computed loss column (greatest(prev_close - close, 0))
+      - name: "n"
+        type: int
+        description: RSI period
+
+  - name: macd_line
+    arguments:
+      - name: ema_fast_col
+        type: string
+        description: Pre-computed fast EMA column
+      - name: ema_slow_col
+        type: string
+        description: Pre-computed slow EMA column
+
+  - name: macd_signal
+    arguments:
+      - name: ema_fast_col
+        type: string
+        description: Pre-computed fast EMA column
+      - name: ema_slow_col
+        type: string
+        description: Pre-computed slow EMA column
+      - name: signal_n
+        type: int
+        description: Signal line EMA period
+
+  - name: macd_hist
+    arguments:
+      - name: ema_fast_col
+        type: string
+        description: Pre-computed fast EMA column
+      - name: ema_slow_col
+        type: string
+        description: Pre-computed slow EMA column
+      - name: signal_n
+        type: int
+        description: Signal line EMA period
+
+  - name: atr
+    arguments:
+      - name: true_range_col
+        type: string
+        description: Pre-computed true_range column (greatest(high-low, abs(high-prev_close), abs(low-prev_close)))
+      - name: "n"
+        type: int
+        description: ATR period
+
+  - name: bb_middle
+    arguments:
+      - name: col
+        type: string
+        description: Column name to aggregate
+      - name: "n"
+        type: int
+        description: Bollinger Band period
+
+  - name: bb_upper
+    arguments:
+      - name: col
+        type: string
+        description: Column name to aggregate
+      - name: "n"
+        type: int
+        description: Bollinger Band period
+      - name: k
+        type: float
+        description: Standard deviation multiplier (default 2)
+
+  - name: bb_lower
+    arguments:
+      - name: col
+        type: string
+        description: Column name to aggregate
+      - name: "n"
+        type: int
+        description: Bollinger Band period
+      - name: k
+        type: float
+        description: Standard deviation multiplier (default 2)
+
+  - name: ch_table_engine
+    arguments:
+      - name: order_by
+        type: string
+        description: ORDER BY clause columns for ReplacingMergeTree
+      - name: partition_by
+        type: string
+        description: Optional PARTITION BY clause (default none)
+      - name: version_col
+        type: string
+        description: Version column for deduplication (default ingested_at)
+
+  - name: time_bucket
+    arguments:
+      - name: col
+        type: string
+        description: Datetime column to truncate
+      - name: interval
+        type: string
+        description: Interval expression (e.g. '1 HOUR', '4 HOUR')
