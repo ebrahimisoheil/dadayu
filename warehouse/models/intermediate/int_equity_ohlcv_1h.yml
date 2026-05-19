@@ -5,12 +5,30 @@ models:
     description: 1h equity OHLCV joined with trading calendar session metadata
     columns:
       - name: ticker
+        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
         tests: [not_null]
       - name: market
+        description: Market identifier — germany, us, or india
         tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         tests: [not_null]
+      - name: open
+        description: Opening price for the 1h bar
+      - name: high
+        description: Highest price during the 1h bar
+      - name: low
+        description: Lowest price during the 1h bar
       - name: close
+        description: Closing price for the 1h bar
         tests: [not_null]
+      - name: volume
+        description: Total shares traded during the 1h bar
       - name: session_id
-        description: Unique session key — e.g. US_20260301
+        description: Unique session key — format MARKET_YYYYMMDD (e.g. US_20260519)
+      - name: is_trading_day
+        description: True if a regular trading session occurs on this date
+      - name: session_open_utc
+        description: Market open time in UTC
+      - name: session_close_utc
+        description: Market close time in UTC

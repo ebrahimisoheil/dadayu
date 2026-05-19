@@ -11,15 +11,17 @@ models:
         description: Lowercase exchange symbol (e.g. btc, eth)
         tests: [not_null]
       - name: name
+        description: Full cryptocurrency name (e.g. Bitcoin, Ethereum)
         tests: [not_null]
       - name: market_rank
-        description: CoinGecko market cap rank
+        description: CoinGecko global market cap rank (1 = largest)
         tests: [not_null]
       - name: market_cap
-        description: Market cap in USD (Nullable — may be missing for small assets)
+        description: Total market capitalisation in USD (Nullable — may be missing for small assets)
       - name: category
-        description: Asset category sourced from crypto_universe seed (e.g. Layer 1, DeFi)
+        description: Asset category from crypto_universe seed (e.g. Layer 1, DeFi)
       - name: chain
-        description: Primary chain (deferred — empty string until CoinGecko Pro)
+        description: Primary blockchain (e.g. Ethereum, Solana) — empty until CoinGecko Pro
       - name: fetched_at
+        description: Timestamp when this record was fetched from CoinGecko
         tests: [not_null]

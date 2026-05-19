@@ -2,13 +2,25 @@ version: 2
 
 models:
   - name: int_crypto_ohlcv_4h
-    description: 4h crypto OHLCV pass-through
+    description: 4h crypto OHLCV pass-through — no calendar join (crypto trades 24/7)
     columns:
       - name: ticker
+        description: yfinance crypto symbol (e.g. BTC-USD, ETH-USD)
         tests: [not_null]
       - name: market
+        description: Always 'crypto'
         tests: [not_null]
       - name: ts
+        description: Bar open timestamp (UTC, tz-naive)
         tests: [not_null]
+      - name: open
+        description: Opening price for the 4h bar (USD)
+      - name: high
+        description: Highest price during the 4h bar (USD)
+      - name: low
+        description: Lowest price during the 4h bar (USD)
       - name: close
+        description: Closing price for the 4h bar (USD)
         tests: [not_null]
+      - name: volume
+        description: Total units traded during the 4h bar
