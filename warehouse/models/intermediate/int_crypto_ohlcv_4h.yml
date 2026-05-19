@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_crypto_ohlcv_4h
+    description: 4h crypto OHLCV pass-through
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]

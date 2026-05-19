@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_crypto_ohlcv_1h
+    description: 1h crypto OHLCV pass-through — no calendar join (crypto trades 24/7)
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]

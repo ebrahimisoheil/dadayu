@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_equity_ohlcv_4h
+    description: 4h equity OHLCV joined with trading calendar session metadata
+    columns:
+      - name: ticker
+        tests: [not_null]
+      - name: market
+        tests: [not_null]
+      - name: ts
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
