@@ -10,5 +10,6 @@ uvicorn>=0.29
 pytest>=8.0
 dagster>=1.7
 dagster-webserver>=1.7
+dagster-postgres>=0.23
 dagster-dbt>=0.23
 dbt-clickhouse>=1.8

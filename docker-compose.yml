@@ -64,7 +64,7 @@ services:
   dadayu_dagster_webserver:
     image: dadayu:latest
     container_name: dadayu_dagster_webserver
-    command: dagster-webserver -h 0.0.0.0 -p 3000
+    command: dagster-webserver -h 0.0.0.0 -p 3000 -w /opt/dagster/home/workspace.yaml
     ports:
       - "3000:3000"
     env_file: .env
@@ -82,7 +82,7 @@ services:
   dadayu_dagster_daemon:
     image: dadayu:latest
     container_name: dadayu_dagster_daemon
-    command: dagster-daemon run
+    command: dagster-daemon run -w /opt/dagster/home/workspace.yaml
     env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
