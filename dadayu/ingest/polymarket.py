@@ -45,7 +45,7 @@ def _fetch_clob_history(
 ) -> pd.DataFrame:
     url = f"{CLOB_BASE}/prices-history"
     params = {
-        "market_id": yes_token_id,
+        "market": yes_token_id,
         "startTs": start_ts,
         "endTs": end_ts,
         "fidelity": fidelity,
