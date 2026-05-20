@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: fct_polymarket_signals
+    description: >
+      Hourly prediction market probability signals. One row per (condition_id, ts).
+      Primary inputs for correlation analysis with fct_ohlcv_crypto_1h and fct_ohlcv_1h.
+      Filter WHERE days_to_resolution > 2 to exclude near-expiry probability collapse.
+      Filter WHERE NOT is_interpolated to exclude hours with no trades.
+    columns:
+      - name: condition_id
+        description: Market identifier
+        tests:
+          - not_null
+      - name: ts
+        description: 1h bucket start (UTC)
+        tests:
+          - not_null
+      - name: probability
+        description: Close-of-hour implied YES probability [0, 1]
+      - name: prob_change
+        description: probability minus previous hour. Primary signal (Δp). Zero for first row per market.
+      - name: log_odds
+        description: ln(p/(1-p)) with p clipped to [0.01, 0.99]. Use for regression instead of raw probability.
+      - name: volume_usd
+        description: Total USD volume traded in this hour
+      - name: is_interpolated
+        description: True when no trade occurred in this bucket (probability carried from prior hour)
+      - name: question
+        description: Market question text
+      - name: linked_asset
+        description: "Ticker for joining with price data (e.g. BTC-USD, AAPL). Null if no clear link."
+      - name: asset_type
+        description: "'crypto' | 'equity' | 'macro' | null"
+      - name: days_to_resolution
+        description: Days until market resolves. Null when resolution_date unknown. Filter > 2 to exclude expiry noise.
