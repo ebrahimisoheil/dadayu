@@ -2,7 +2,8 @@
     materialized='table',
     engine='MergeTree()',
     order_by='(ticker, market, ts)',
-    partition_by='toYYYYMM(ts)'
+    partition_by='toYYYYMM(ts)',
+    pre_hook="SET max_bytes_before_external_sort = 2000000000, max_bytes_before_external_group_by = 2000000000"
 ) }}
 
 WITH base AS (
