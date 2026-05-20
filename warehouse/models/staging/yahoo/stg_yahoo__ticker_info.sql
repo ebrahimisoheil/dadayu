@@ -1,3 +1,9 @@
+{{ config(
+    materialized='table',
+    engine='ReplacingMergeTree(fetched_at)',
+    order_by='(ticker, market)'
+) }}
+
 WITH source AS (
     SELECT * FROM {{ source('yahoo', 'tickers') }} FINAL
 )

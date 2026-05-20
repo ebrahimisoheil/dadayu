@@ -2,19 +2,36 @@ version: 2
 
 models:
   - name: stg_polymarket__prices
-    description: Filtered Polymarket probability snapshots. Rows outside [0, 1] excluded.
+    description: >
+      Filtered Polymarket probability snapshots. Rows with probability outside [0, 1] excluded.
+      Incremental — appends only rows ingested since the last run. Partitioned by month.
+    config:
+      tags: [polymarket, staging, prices]
+    meta:
+      owner: data-engineering
+      sla: every_4h
+      source_api: CLOB API (https://clob.polymarket.com)
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [condition_id, ts]
     columns:
       - name: condition_id
         description: Market identifier — joins to stg_polymarket__markets
         tests:
           - not_null
       - name: ts
-        description: Timestamp of this probability observation (hourly resolution)
+        description: Timestamp of this probability observation (UTC, hourly resolution from fidelity=60)
         tests:
           - not_null
       - name: probability
-        description: Implied YES probability [0, 1]
+        description: Implied YES probability in [0, 1]. Rows outside this range filtered at staging.
+        tests:
+          - not_null
       - name: volume_usd
-        description: USD volume traded in this candle
+        description: USD volume traded in this candle. Zero when CLOB response omits volume.
+        tests:
+          - not_null
       - name: ingested_at
-        description: Timestamp when this row was ingested into ClickHouse
+        description: UTC timestamp when this row was written to ClickHouse by the Dagster asset
+        tests:
+          - not_null

@@ -1,3 +1,10 @@
+{{ config(
+    materialized='table',
+    engine='MergeTree()',
+    order_by='(condition_id, ts)',
+    partition_by='toYYYYMM(ts)'
+) }}
+
 WITH hourly AS (
     SELECT * FROM {{ ref('int_polymarket_prices_1h') }}
 ),

@@ -1,3 +1,9 @@
+{{ config(
+    materialized='table',
+    engine='ReplacingMergeTree(fetched_at)',
+    order_by='coin_id'
+) }}
+
 WITH source AS (
     SELECT * FROM {{ source('coingecko', 'crypto_metadata') }} FINAL
 )

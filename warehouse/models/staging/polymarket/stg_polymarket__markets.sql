@@ -1,3 +1,9 @@
+{{ config(
+    materialized='table',
+    engine='ReplacingMergeTree(fetched_at)',
+    order_by='condition_id'
+) }}
+
 WITH source AS (
     SELECT * FROM {{ source('polymarket', 'polymarket_markets') }} FINAL
 )

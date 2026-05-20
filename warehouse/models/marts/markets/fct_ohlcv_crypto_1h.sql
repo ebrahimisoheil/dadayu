@@ -1,3 +1,10 @@
+{{ config(
+    materialized='table',
+    engine='MergeTree()',
+    order_by='(ticker, market, ts)',
+    partition_by='toYYYYMM(ts)'
+) }}
+
 WITH ohlcv AS (
     SELECT * FROM {{ ref('int_crypto_ohlcv_1h') }}
 ),

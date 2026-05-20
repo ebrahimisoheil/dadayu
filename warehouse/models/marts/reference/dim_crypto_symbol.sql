@@ -1,3 +1,9 @@
+{{ config(
+    materialized='table',
+    engine='ReplacingMergeTree(fetched_at)',
+    order_by='yf_symbol'
+) }}
+
 WITH snapshot AS (
     SELECT *
     FROM {{ ref('snap_dim_crypto_symbol') }}

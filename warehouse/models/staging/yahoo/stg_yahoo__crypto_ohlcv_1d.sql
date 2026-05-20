@@ -1,5 +1,18 @@
+{{ config(
+    materialized='incremental',
+    engine='ReplacingMergeTree()',
+    order_by='(ticker, market, ts)',
+    partition_by='toYYYYMM(ts)',
+    unique_key=['ticker', 'market', 'ts'],
+    incremental_strategy='delete+insert',
+    on_schema_change='append_new_columns'
+) }}
+
 WITH source AS (
     SELECT * FROM {{ source('yahoo', 'crypto_prices_daily') }} FINAL
+    {% if is_incremental() %}
+    WHERE date > (SELECT toDate(max(ts)) FROM {{ this }})
+    {% endif %}
 )
 
 SELECT

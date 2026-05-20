@@ -1,3 +1,9 @@
+{{ config(
+    materialized='table',
+    engine='MergeTree()',
+    order_by='(date, market)'
+) }}
+
 SELECT
     date,
     market,
