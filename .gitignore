@@ -5,3 +5,4 @@ warehouse/target/
 warehouse/logs/
 warehouse/package-lock.yml
 dagster_home/
+.gstack/
