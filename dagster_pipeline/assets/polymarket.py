@@ -6,7 +6,6 @@ import pandas as pd
 from dagster import asset
 
 from dadayu.ingest.polymarket import discover_markets, fetch_price_history
-from dadayu.watermark import get_watermark
 from dagster_pipeline.resources import ClickhouseResource
 
 
@@ -30,6 +29,24 @@ def polymarket_markets(clickhouse: ClickhouseResource) -> None:
     client.insert_df("polymarket_markets", df[cols])
     print(f"  Upserted {len(df):,} markets into polymarket_markets")
 
+    # Tombstone markets that disappeared from Gamma (implicitly closed)
+    result = client.query(
+        "SELECT condition_id FROM polymarket_markets FINAL WHERE closed = false"
+    )
+    prev_active = {row[0] for row in result.result_rows}
+    newly_closed = prev_active - set(df["condition_id"].tolist())
+    if newly_closed:
+        now = pd.Timestamp.now()
+        tombstone_rows = pd.DataFrame([{
+            "condition_id": cid, "question": "", "category": "",
+            "volume_usd": 0.0, "liquidity_usd": 0.0,
+            "active": False, "closed": True,
+            "resolution_date": None, "outcome": None, "yes_token_id": "",
+            "linked_asset": None, "asset_type": None, "fetched_at": now,
+        } for cid in newly_closed])
+        client.insert_df("polymarket_markets", tombstone_rows[cols])
+        print(f"  Marked {len(newly_closed)} markets as closed (no longer in Gamma response)")
+
 
 @asset(group_name="ingestion", deps=[polymarket_markets])
 def polymarket_prices(clickhouse: ClickhouseResource) -> None:
@@ -48,14 +65,15 @@ def polymarket_prices(clickhouse: ClickhouseResource) -> None:
     total_rows = 0
 
     for condition_id, yes_token_id in markets:
-        watermark_str = get_watermark(
-            client, "polymarket_prices", "ts", condition_id=condition_id
+        wm_result = client.query(
+            "SELECT max(ts) FROM polymarket_prices WHERE condition_id = {condition_id:String}",
+            parameters={"condition_id": condition_id},
         )
-        start_ts = (
-            int(pd.Timestamp(watermark_str).timestamp())
-            if watermark_str is not None
-            else fallback_start
-        )
+        max_ts_val = wm_result.result_rows[0][0]
+        if max_ts_val is None:
+            start_ts = fallback_start
+        else:
+            start_ts = int((pd.Timestamp(max_ts_val) + pd.Timedelta(hours=1)).timestamp())
 
         if start_ts >= now_ts:
             continue

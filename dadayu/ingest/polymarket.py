@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import time
 from pathlib import Path
 
@@ -31,7 +32,9 @@ def _load_asset_map() -> dict[str, tuple[str, str]]:
 def _parse_linked_asset(question: str, tickers: list[str]) -> tuple[str | None, str | None]:
     question_upper = question.upper()
     for ticker in tickers:
-        if ticker in question_upper:
+        if len(ticker) < 3:
+            continue
+        if re.search(rf"\b{re.escape(ticker)}\b", question_upper):
             return f"{ticker}-USD", "crypto"
     return None, None
 

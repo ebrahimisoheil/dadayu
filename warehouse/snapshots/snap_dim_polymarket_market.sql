@@ -4,7 +4,7 @@
     target_schema='dadayu',
     unique_key='condition_id',
     strategy='check',
-    check_cols=['active', 'closed', 'outcome', 'volume_usd', 'liquidity_usd', 'linked_asset', 'asset_type']
+    check_cols=['active', 'closed', 'outcome', 'linked_asset', 'asset_type']
 ) }}
 
 SELECT

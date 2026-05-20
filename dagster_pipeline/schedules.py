@@ -24,7 +24,7 @@ crypto_job = define_asset_job(
 polymarket_job = define_asset_job(
     name="polymarket_job",
     selection=AssetSelection.assets(
-        polymarket_markets, polymarket_prices, dadayu_dbt_assets
+        polymarket_markets, polymarket_prices
     ),
 )
 
