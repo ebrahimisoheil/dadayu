@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_polymarket__prices
+    description: Filtered Polymarket probability snapshots. Rows outside [0, 1] excluded.
+    columns:
+      - name: condition_id
+        description: Market identifier — joins to stg_polymarket__markets
+        tests:
+          - not_null
+      - name: ts
+        description: Timestamp of this probability observation (hourly resolution)
+        tests:
+          - not_null
+      - name: probability
+        description: Implied YES probability [0, 1]
+      - name: volume_usd
+        description: USD volume traded in this candle

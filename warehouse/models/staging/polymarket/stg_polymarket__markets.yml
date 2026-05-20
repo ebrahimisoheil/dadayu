@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: stg_polymarket__markets
+    description: Cleaned Polymarket market metadata. One row per condition_id (deduped via FINAL).
+    columns:
+      - name: condition_id
+        description: Unique market identifier from Polymarket
+        tests:
+          - not_null
+          - unique
+      - name: question
+        description: Full market question text
+      - name: yes_token_id
+        description: CLOB token ID for the YES outcome — used by the CLOB prices-history API. NOT the same as condition_id.
+        tests:
+          - not_null
+      - name: linked_asset
+        description: "Ticker this market correlates to (e.g. BTC-USD). Null if no clear link."
+      - name: asset_type
+        description: "'crypto' | 'equity' | 'macro' | null"
+      - name: closed
+        description: True when market has resolved. Closed markets exit the price fetch loop permanently.
