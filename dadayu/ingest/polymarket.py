@@ -28,9 +28,9 @@ def _load_asset_map() -> dict[str, tuple[str, str]]:
     return overrides
 
 
-def _parse_linked_asset(question: str) -> tuple[str | None, str | None]:
+def _parse_linked_asset(question: str, tickers: list[str]) -> tuple[str | None, str | None]:
     question_upper = question.upper()
-    for ticker in _load_crypto_tickers():
+    for ticker in tickers:
         if ticker in question_upper:
             return f"{ticker}-USD", "crypto"
     return None, None
@@ -61,7 +61,10 @@ def _fetch_clob_history(
         df = df.rename(columns={"t": "ts", "p": "probability", "v": "volume_usd"})
         df["ts"] = pd.to_datetime(df["ts"], unit="s")
         df["probability"] = df["probability"].astype(float)
-        df["volume_usd"] = pd.to_numeric(df.get("volume_usd", 0), errors="coerce").fillna(0.0)
+        if "volume_usd" not in df.columns:
+            df["volume_usd"] = 0.0
+        else:
+            df["volume_usd"] = pd.to_numeric(df["volume_usd"], errors="coerce").fillna(0.0)
         return df[["ts", "probability", "volume_usd"]]
     raise RuntimeError(f"CLOB prices-history failed for {yes_token_id} after 3 attempts")
 
@@ -74,10 +77,20 @@ def discover_markets(min_volume_usd: float = 50_000) -> pd.DataFrame:
         "volume_num_min": min_volume_usd,
         "limit": 500,
     }
-    resp = requests.get(url, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    for attempt in range(3):
+        resp = requests.get(url, params=params, timeout=30)
+        if resp.status_code == 429:
+            wait = min(60, 4 ** attempt)
+            print(f"  [WARN] Gamma API rate limited — waiting {wait}s (attempt {attempt + 1}/3)...")
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        data = resp.json()
+        break
+    else:
+        raise RuntimeError("Gamma API /markets failed after 3 attempts")
 
+    tickers = _load_crypto_tickers()
     overrides = _load_asset_map()
     rows = []
     for m in data:
@@ -86,7 +99,7 @@ def discover_markets(min_volume_usd: float = 50_000) -> pd.DataFrame:
             (t["token_id"] for t in m.get("tokens", []) if t.get("outcome") == "Yes"),
             "",
         )
-        linked_asset, asset_type = _parse_linked_asset(m.get("question", ""))
+        linked_asset, asset_type = _parse_linked_asset(m.get("question", ""), tickers)
         if condition_id in overrides:
             linked_asset, asset_type = overrides[condition_id]
 
@@ -108,6 +121,12 @@ def discover_markets(min_volume_usd: float = 50_000) -> pd.DataFrame:
             "asset_type": asset_type,
         })
 
+    if not rows:
+        return pd.DataFrame(columns=[
+            "condition_id", "question", "category", "volume_usd", "liquidity_usd",
+            "active", "closed", "resolution_date", "outcome", "yes_token_id",
+            "linked_asset", "asset_type",
+        ])
     return pd.DataFrame(rows)
 
 

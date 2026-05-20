@@ -86,6 +86,18 @@ def test_fetch_price_history_returns_empty_on_no_history():
     assert list(df.columns) == ["ts", "probability", "volume_usd"]
 
 
+def test_clob_retries_on_429():
+    mock_429 = MagicMock(status_code=429)
+    history = [{"t": 1700000000, "p": "0.60", "v": "100.0"}]
+    mock_ok = _mock_clob_response(history)
+    with patch("dadayu.ingest.polymarket.requests.get", side_effect=[mock_429, mock_ok]):
+        with patch("dadayu.ingest.polymarket.time.sleep") as mock_sleep:
+            from dadayu.ingest.polymarket import fetch_price_history
+            df = fetch_price_history("token_yes_abc", 1700000000, 1700010000)
+    mock_sleep.assert_called_once_with(1)  # 4^0 = 1 on first retry
+    assert len(df) == 1
+
+
 def test_fetch_daily_price_history_uses_fidelity_1440():
     history = [{"t": 1700000000, "p": "0.55", "v": "5000.0"}]
     with patch("dadayu.ingest.polymarket.requests.get", return_value=_mock_clob_response(history)) as mock_get:
