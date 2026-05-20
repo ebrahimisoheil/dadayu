@@ -16,10 +16,7 @@ def _mock_gamma_market(condition_id="0xabc123", question="Will BTC exceed $100k?
         "closed": False,
         "endDate": "2025-12-31T00:00:00Z",
         "outcome": None,
-        "tokens": [
-            {"outcome": "Yes", "token_id": "token_yes_abc"},
-            {"outcome": "No", "token_id": "token_no_abc"},
-        ],
+        "clobTokenIds": '["token_yes_abc", "token_no_abc"]',
     }
 
 

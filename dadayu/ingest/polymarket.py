@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import re
 import time
 from pathlib import Path
@@ -98,10 +99,12 @@ def discover_markets(min_volume_usd: float = 50_000) -> pd.DataFrame:
     rows = []
     for m in data:
         condition_id = m.get("conditionId", "")
-        yes_token_id = next(
-            (t["token_id"] for t in m.get("tokens", []) if t.get("outcome") == "Yes"),
-            "",
-        )
+        clob_ids_raw = m.get("clobTokenIds", "[]")
+        try:
+            clob_ids = json.loads(clob_ids_raw) if isinstance(clob_ids_raw, str) else clob_ids_raw
+            yes_token_id = clob_ids[0] if clob_ids else ""
+        except (json.JSONDecodeError, IndexError):
+            yes_token_id = ""
         linked_asset, asset_type = _parse_linked_asset(m.get("question", ""), tickers)
         if condition_id in overrides:
             linked_asset, asset_type = overrides[condition_id]
