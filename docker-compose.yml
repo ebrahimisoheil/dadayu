@@ -46,7 +46,15 @@ services:
       DAGSTER_HOME: /opt/dagster/home
       CLICKHOUSE_HOST: dadayu_clickhouse
     volumes:
-      - dagster_home:/opt/dagster/home
+      - dadayu_dagster_home:/opt/dagster/home
+      - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
+      - ./dagster_config/workspace.yaml:/opt/dagster/home/workspace.yaml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "dagster api grpc-health-check -p 4000"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     depends_on:
       dadayu_clickhouse:
         condition: service_healthy
@@ -59,23 +67,33 @@ services:
     command: dagster-webserver -h 0.0.0.0 -p 3000
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
+      CLICKHOUSE_HOST: dadayu_clickhouse
     volumes:
-      - dagster_home:/opt/dagster/home
+      - dadayu_dagster_home:/opt/dagster/home
+      - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
+      - ./dagster_config/workspace.yaml:/opt/dagster/home/workspace.yaml:ro
     depends_on:
-      - dadayu_dagster_code
+      dadayu_dagster_code:
+        condition: service_healthy
 
   dadayu_dagster_daemon:
     image: dadayu:latest
     container_name: dadayu_dagster_daemon
     command: dagster-daemon run
+    env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
+      CLICKHOUSE_HOST: dadayu_clickhouse
     volumes:
-      - dagster_home:/opt/dagster/home
+      - dadayu_dagster_home:/opt/dagster/home
+      - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
+      - ./dagster_config/workspace.yaml:/opt/dagster/home/workspace.yaml:ro
     depends_on:
-      - dadayu_dagster_code
+      dadayu_dagster_code:
+        condition: service_healthy
 
   dadayu_api:
     build: .
@@ -108,4 +126,4 @@ services:
 volumes:
   dadayu_ch_data:
   dadayu_pg_data:
-  dagster_home:
+  dadayu_dagster_home:
