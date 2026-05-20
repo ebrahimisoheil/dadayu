@@ -9,12 +9,18 @@ def get_watermark(
     table: str,
     date_col: str,
     market: str | None = None,
+    condition_id: str | None = None,
 ) -> str | None:
     try:
         if market is not None:
             result = client.query(
                 f"SELECT max({date_col}) FROM {table} WHERE market = {{market:String}}",
                 parameters={"market": market},
+            )
+        elif condition_id is not None:
+            result = client.query(
+                f"SELECT max({date_col}) FROM {table} WHERE condition_id = {{condition_id:String}}",
+                parameters={"condition_id": condition_id},
             )
         else:
             result = client.query(f"SELECT max({date_col}) FROM {table}")
