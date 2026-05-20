@@ -145,15 +145,32 @@ Services started:
 | Service | Port | Description |
 |---|---|---|
 | `dadayu_clickhouse` | 8123, 9000 | ClickHouse database |
-| `dadayu_postgres` | — | Dagster metadata store |
+| `dadayu_postgres` | — | Dagster + Metabase metadata store |
+| `dadayu_postgres_setup` | — | One-shot init: creates `metabase` database, exits |
 | `dadayu_dagster_code` | 4000 | Dagster code server |
 | `dadayu_dagster_webserver` | 3000 | Dagster UI |
 | `dadayu_dagster_daemon` | — | Schedule runner |
 | `dadayu_api` | 8000 | FastAPI trigger endpoint |
+| `dadayu_metabase` | 3001 | Metabase BI (ClickHouse built-in as of v0.54) |
 
 ### 3. Open Dagster UI
 
 `http://localhost:3000`
+
+### 4. Open Metabase
+
+`http://localhost:3001`
+
+First launch: Metabase runs a setup wizard (~60s to start). Connect to ClickHouse:
+
+| Field | Value |
+|---|---|
+| Database type | ClickHouse |
+| Host | `dadayu_clickhouse` |
+| Port | `8123` |
+| Database | `dadayu` |
+| Username | `dadayu` |
+| Password | `changeme`|
 
 Materialize assets manually or wait for the first scheduled run.
 

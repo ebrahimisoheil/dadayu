@@ -37,6 +37,19 @@ services:
       timeout: 5s
       retries: 5
 
+  dadayu_postgres_setup:
+    image: postgres:16-alpine
+    container_name: dadayu_postgres_setup
+    restart: "no"
+    depends_on:
+      dadayu_postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
+    command: >
+      psql -h dadayu_postgres -U ${DAGSTER_PG_USER:-dagster} -d ${DAGSTER_PG_DB:-dagster}
+      -c "SELECT 'CREATE DATABASE metabase' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'metabase')\gexec"
+
   dadayu_dagster_code:
     build: .
     image: dadayu:latest
@@ -139,7 +152,35 @@ services:
     profiles:
       - tools
 
+  dadayu_metabase:
+    image: metabase/metabase:v0.61.2
+    container_name: dadayu_metabase
+    ports:
+      - "3001:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: dadayu_postgres
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${DAGSTER_PG_USER:-dagster}
+      MB_DB_PASS: ${DAGSTER_PG_PASSWORD:-dagster}
+      MB_DB_DBNAME: metabase
+      JAVA_TIMEZONE: UTC
+    volumes:
+      - dadayu_metabase_data:/metabase-data
+    depends_on:
+      dadayu_clickhouse:
+        condition: service_healthy
+      dadayu_postgres_setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   dadayu_ch_data:
   dadayu_pg_data:
   dadayu_dagster_home:
+  dadayu_metabase_data:
