@@ -109,6 +109,17 @@ def test_discover_markets_no_false_positive_for_substring():
     assert df.iloc[0]["linked_asset"] is None  # "ETH" should NOT match "ETHanol"
 
 
+def test_discover_markets_matches_eth_ticker():
+    with patch("dadayu.ingest.polymarket.requests.get") as mock_get:
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = [
+            _mock_gamma_market(question="Will ETH hit $5000 by end of year?")
+        ]
+        from dadayu.ingest.polymarket import discover_markets
+        df = discover_markets(min_volume_usd=50_000)
+    assert df.iloc[0]["linked_asset"] == "ETH-USD"
+
+
 def test_fetch_daily_price_history_uses_fidelity_1440():
     history = [{"t": 1700000000, "p": "0.55", "v": "5000.0"}]
     with patch("dadayu.ingest.polymarket.requests.get", return_value=_mock_clob_response(history)) as mock_get:
