@@ -140,3 +140,38 @@ CREATE TABLE IF NOT EXISTS crypto_metadata
 ENGINE = ReplacingMergeTree(fetched_at)
 ORDER BY coin_id
 PARTITION BY tuple();
+
+
+-- Polymarket market metadata — upserted daily via Gamma API
+CREATE TABLE IF NOT EXISTS polymarket_markets
+(
+    condition_id      String,
+    question          String,
+    category          String,
+    volume_usd        Float64,
+    liquidity_usd     Float64,
+    active            Bool,
+    closed            Bool,
+    resolution_date   Nullable(DateTime),
+    outcome           Nullable(String),
+    yes_token_id      String,
+    linked_asset      Nullable(String),
+    asset_type        Nullable(String),
+    fetched_at        DateTime DEFAULT now()
+)
+ENGINE = ReplacingMergeTree(fetched_at)
+ORDER BY condition_id;
+
+
+-- Polymarket hourly probability snapshots — watermarked per condition_id
+CREATE TABLE IF NOT EXISTS polymarket_prices
+(
+    condition_id  String,
+    ts            DateTime,
+    probability   Float64,
+    volume_usd    Float64,
+    ingested_at   DateTime DEFAULT now()
+)
+ENGINE = ReplacingMergeTree(ingested_at)
+ORDER BY (condition_id, ts)
+PARTITION BY toYYYYMM(ts);
