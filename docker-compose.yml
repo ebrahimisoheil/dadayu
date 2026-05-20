@@ -26,9 +26,9 @@ services:
     image: postgres:16-alpine
     container_name: dadayu_postgres
     environment:
-      POSTGRES_USER: dagster
-      POSTGRES_PASSWORD: dagster
-      POSTGRES_DB: dagster
+      POSTGRES_USER: ${DAGSTER_PG_USER:-dagster}
+      POSTGRES_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
+      POSTGRES_DB: ${DAGSTER_PG_DB:-dagster}
     volumes:
       - dadayu_pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -38,6 +38,7 @@ services:
       retries: 5
 
   dadayu_dagster_code:
+    build: .
     image: dadayu:latest
     container_name: dadayu_dagster_code
     command: dagster code-server start -h 0.0.0.0 -p 4000 -m dagster_pipeline.definitions
@@ -45,6 +46,10 @@ services:
     environment:
       DAGSTER_HOME: /opt/dagster/home
       CLICKHOUSE_HOST: dadayu_clickhouse
+      DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
+      DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
+      DAGSTER_PG_HOST: dadayu_postgres
+      DAGSTER_PG_DB: ${DAGSTER_PG_DB:-dagster}
     volumes:
       - dadayu_dagster_home:/opt/dagster/home
       - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
@@ -62,6 +67,7 @@ services:
         condition: service_healthy
 
   dadayu_dagster_webserver:
+    build: .
     image: dadayu:latest
     container_name: dadayu_dagster_webserver
     command: dagster-webserver -h 0.0.0.0 -p 3000 -w /opt/dagster/home/workspace.yaml
@@ -71,6 +77,10 @@ services:
     environment:
       DAGSTER_HOME: /opt/dagster/home
       CLICKHOUSE_HOST: dadayu_clickhouse
+      DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
+      DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
+      DAGSTER_PG_HOST: dadayu_postgres
+      DAGSTER_PG_DB: ${DAGSTER_PG_DB:-dagster}
     volumes:
       - dadayu_dagster_home:/opt/dagster/home
       - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
@@ -80,6 +90,7 @@ services:
         condition: service_healthy
 
   dadayu_dagster_daemon:
+    build: .
     image: dadayu:latest
     container_name: dadayu_dagster_daemon
     command: dagster-daemon run -w /opt/dagster/home/workspace.yaml
@@ -87,6 +98,10 @@ services:
     environment:
       DAGSTER_HOME: /opt/dagster/home
       CLICKHOUSE_HOST: dadayu_clickhouse
+      DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
+      DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
+      DAGSTER_PG_HOST: dadayu_postgres
+      DAGSTER_PG_DB: ${DAGSTER_PG_DB:-dagster}
     volumes:
       - dadayu_dagster_home:/opt/dagster/home
       - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro

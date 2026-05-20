@@ -1,0 +1,10 @@
+.env
+.git
+__pycache__
+*.pyc
+dagster_home/
+warehouse/target/
+warehouse/logs/
+compose.override.yml
+.gstack/
+.pytest_cache/
