@@ -37,6 +37,46 @@ services:
       timeout: 5s
       retries: 5
 
+  dadayu_dagster_code:
+    image: dadayu:latest
+    container_name: dadayu_dagster_code
+    command: dagster code-server start -h 0.0.0.0 -p 4000 -m dagster_pipeline.definitions
+    env_file: .env
+    environment:
+      DAGSTER_HOME: /opt/dagster/home
+      CLICKHOUSE_HOST: dadayu_clickhouse
+    volumes:
+      - dagster_home:/opt/dagster/home
+    depends_on:
+      dadayu_clickhouse:
+        condition: service_healthy
+      dadayu_postgres:
+        condition: service_healthy
+
+  dadayu_dagster_webserver:
+    image: dadayu:latest
+    container_name: dadayu_dagster_webserver
+    command: dagster-webserver -h 0.0.0.0 -p 3000
+    ports:
+      - "3000:3000"
+    environment:
+      DAGSTER_HOME: /opt/dagster/home
+    volumes:
+      - dagster_home:/opt/dagster/home
+    depends_on:
+      - dadayu_dagster_code
+
+  dadayu_dagster_daemon:
+    image: dadayu:latest
+    container_name: dadayu_dagster_daemon
+    command: dagster-daemon run
+    environment:
+      DAGSTER_HOME: /opt/dagster/home
+    volumes:
+      - dagster_home:/opt/dagster/home
+    depends_on:
+      - dadayu_dagster_code
+
   dadayu_api:
     build: .
     image: dadayu:latest
@@ -68,3 +108,4 @@ services:
 volumes:
   dadayu_ch_data:
   dadayu_pg_data:
+  dagster_home:
