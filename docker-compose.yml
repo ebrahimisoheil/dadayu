@@ -54,6 +54,7 @@ services:
       - dadayu_dagster_home:/opt/dagster/home
       - ./dagster_config/dagster.yaml:/opt/dagster/home/dagster.yaml:ro
       - ./dagster_config/workspace.yaml:/opt/dagster/home/workspace.yaml:ro
+      - ~/.dbt:/root/.dbt:ro
     healthcheck:
       test: ["CMD-SHELL", "dagster api grpc-health-check -p 4000"]
       interval: 5s
