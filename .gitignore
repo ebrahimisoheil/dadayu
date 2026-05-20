@@ -6,3 +6,5 @@ warehouse/logs/
 warehouse/package-lock.yml
 dagster_home/
 .gstack/
+
+compose.override.yml
