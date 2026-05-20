@@ -40,16 +40,14 @@ def _parse_linked_asset(question: str, tickers: list[str]) -> tuple[str | None, 
     return None, None
 
 
-def _fetch_clob_history(
+_CLOB_MAX_WINDOW = 15 * 24 * 3600  # API rejects intervals > 15 days
+
+
+def _fetch_clob_chunk(
     yes_token_id: str, start_ts: int, end_ts: int, fidelity: int
 ) -> pd.DataFrame:
     url = f"{CLOB_BASE}/prices-history"
-    params = {
-        "market": yes_token_id,
-        "startTs": start_ts,
-        "endTs": end_ts,
-        "fidelity": fidelity,
-    }
+    params = {"market": yes_token_id, "startTs": start_ts, "endTs": end_ts, "fidelity": fidelity}
     for attempt in range(3):
         resp = requests.get(url, params=params, timeout=30)
         if resp.status_code == 429:
@@ -71,6 +69,24 @@ def _fetch_clob_history(
             df["volume_usd"] = pd.to_numeric(df["volume_usd"], errors="coerce").fillna(0.0)
         return df[["ts", "probability", "volume_usd"]]
     raise RuntimeError(f"CLOB prices-history failed for {yes_token_id} after 3 attempts")
+
+
+def _fetch_clob_history(
+    yes_token_id: str, start_ts: int, end_ts: int, fidelity: int
+) -> pd.DataFrame:
+    chunks = []
+    chunk_start = start_ts
+    while chunk_start < end_ts:
+        chunk_end = min(chunk_start + _CLOB_MAX_WINDOW, end_ts)
+        chunk = _fetch_clob_chunk(yes_token_id, chunk_start, chunk_end, fidelity)
+        if not chunk.empty:
+            chunks.append(chunk)
+        chunk_start = chunk_end
+        if chunk_start < end_ts:
+            time.sleep(0.1)
+    if not chunks:
+        return pd.DataFrame(columns=["ts", "probability", "volume_usd"])
+    return pd.concat(chunks, ignore_index=True).drop_duplicates(subset=["ts"])
 
 
 def discover_markets(min_volume_usd: float = 50_000) -> pd.DataFrame:

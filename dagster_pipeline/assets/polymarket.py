@@ -93,7 +93,8 @@ def polymarket_prices(clickhouse: ClickhouseResource) -> None:
             parameters={"condition_id": condition_id},
         )
         max_ts_val = wm_result.result_rows[0][0]
-        if max_ts_val is None:
+        _epoch = datetime(1970, 1, 1, 0, 0, 0)
+        if max_ts_val is None or max_ts_val == _epoch:
             start_ts = fallback_start
         else:
             start_ts = int((pd.Timestamp(max_ts_val, tz="UTC") + pd.Timedelta(hours=1)).timestamp())
