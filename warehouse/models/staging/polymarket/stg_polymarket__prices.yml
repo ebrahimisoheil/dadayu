@@ -16,3 +16,5 @@ models:
         description: Implied YES probability [0, 1]
       - name: volume_usd
         description: USD volume traded in this candle
+      - name: ingested_at
+        description: Timestamp when this row was ingested into ClickHouse

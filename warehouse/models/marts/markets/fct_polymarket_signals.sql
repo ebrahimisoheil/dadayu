@@ -18,7 +18,8 @@ SELECT
     h.probability,
     h.probability - lagInFrame(h.probability, 1, h.probability) OVER w  AS prob_change,
     log(
-        greatest(h.probability, 0.01) / (1.0 - least(h.probability, 0.99))
+        greatest(least(h.probability, 0.99), 0.01)
+        / (1.0 - greatest(least(h.probability, 0.99), 0.01))
     )                                                                    AS log_odds,
     h.volume_usd,
     h.is_interpolated,

@@ -6,6 +6,7 @@ SELECT
     condition_id,
     ts,
     probability,
-    volume_usd
+    volume_usd,
+    ingested_at
 FROM source
 WHERE probability BETWEEN 0 AND 1

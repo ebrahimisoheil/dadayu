@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: int_polymarket_prices_1h
+    description: Polymarket probabilities resampled to 1-hour buckets. One row per (condition_id, ts).
+    columns:
+      - name: condition_id
+        tests:
+          - not_null
+      - name: ts
+        description: Hour bucket start (toStartOfHour)
+        tests:
+          - not_null
+      - name: probability
+        description: Close-of-hour probability (argMax)
+      - name: volume_usd
+        description: Total volume traded in this hour
+      - name: is_interpolated
+        description: Always false. Reserved for forward-fill flag.

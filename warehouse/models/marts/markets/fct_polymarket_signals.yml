@@ -7,6 +7,9 @@ models:
       Primary inputs for correlation analysis with fct_ohlcv_crypto_1h and fct_ohlcv_1h.
       Filter WHERE days_to_resolution > 2 to exclude near-expiry probability collapse.
       Filter WHERE NOT is_interpolated to exclude hours with no trades.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [condition_id, ts]
     columns:
       - name: condition_id
         description: Market identifier
@@ -25,7 +28,7 @@ models:
       - name: volume_usd
         description: Total USD volume traded in this hour
       - name: is_interpolated
-        description: True when no trade occurred in this bucket (probability carried from prior hour)
+        description: Always false in current implementation. Reserved for future forward-fill interpolation (hours with no trades).
       - name: question
         description: Market question text
       - name: linked_asset
@@ -33,4 +36,4 @@ models:
       - name: asset_type
         description: "'crypto' | 'equity' | 'macro' | null"
       - name: days_to_resolution
-        description: Days until market resolves. Null when resolution_date unknown. Filter > 2 to exclude expiry noise.
+        description: Days until market resolves. Null when resolution_date unknown. Negative for post-resolution rows. Filter WHERE days_to_resolution > 2 to exclude expiry noise and resolved markets.
