@@ -4,7 +4,14 @@ from dagster import Definitions
 from dagster_dbt import DbtCliResource
 
 from dagster_pipeline.assets.crypto import crypto_info, crypto_ohlcv
-from dagster_pipeline.assets.dbt_assets import DBT_PROJECT_DIR, dadayu_dbt_assets
+from dagster_pipeline.assets.dbt import (
+    data_quality,
+    dbt_mart_assets,
+    dbt_seed_assets,
+    dbt_snapshot_assets,
+    dbt_staging_assets,
+)
+from dagster_pipeline.assets.dbt._common import DBT_PROJECT_DIR
 from dagster_pipeline.assets.equity import equity_ohlcv, equity_ticker_info
 from dagster_pipeline.assets.polymarket import polymarket_markets, polymarket_prices
 from dagster_pipeline.resources import ClickhouseResource
@@ -25,7 +32,11 @@ defs = Definitions(
         crypto_info,
         polymarket_markets,
         polymarket_prices,
-        dadayu_dbt_assets,
+        dbt_seed_assets,
+        dbt_staging_assets,
+        dbt_snapshot_assets,
+        dbt_mart_assets,
+        data_quality,
     ],
     resources={
         "clickhouse": ClickhouseResource(),
