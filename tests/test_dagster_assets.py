@@ -66,3 +66,48 @@ def test_crypto_info_calls_insert():
     mock_client.insert_df.assert_called_once()
     args = mock_client.insert_df.call_args
     assert args[0][0] == "crypto_metadata"
+
+
+def test_dbt_asset_groups_load():
+    from dagster_pipeline.assets.dbt import (
+        data_quality,
+        dbt_mart_assets,
+        dbt_seed_assets,
+        dbt_snapshot_assets,
+        dbt_staging_assets,
+    )
+    for group in [dbt_seed_assets, dbt_staging_assets, dbt_snapshot_assets, dbt_mart_assets]:
+        assert group is not None
+    assert callable(data_quality)
+
+
+def test_data_quality_asset_raises_failure_on_fail_results():
+    import pytest
+    from unittest.mock import MagicMock, patch
+    from dagster import Failure
+    from dagster_pipeline.assets.dbt.quality import data_quality
+    from dagster_pipeline.resources import ClickhouseResource
+    from dadayu.checks import CheckResult
+
+    fail_results = [CheckResult("sec", "bad check", "FAIL", 5, "something wrong")]
+
+    with patch("dadayu.db.get_ch_client") as mock_gc, \
+         patch("dagster_pipeline.assets.dbt.quality.run_all_checks", return_value=fail_results):
+        mock_gc.return_value = MagicMock()
+        with pytest.raises(Failure):
+            data_quality(clickhouse=ClickhouseResource())
+
+
+def test_data_quality_asset_succeeds_on_pass_results():
+    from unittest.mock import MagicMock, patch
+    from dagster_pipeline.assets.dbt.quality import data_quality
+    from dagster_pipeline.resources import ClickhouseResource
+    from dadayu.checks import CheckResult
+
+    pass_results = [CheckResult("sec", "good check", "PASS", 100, "")]
+
+    with patch("dadayu.db.get_ch_client") as mock_gc, \
+         patch("dagster_pipeline.assets.dbt.quality.run_all_checks", return_value=pass_results):
+        mock_gc.return_value = MagicMock()
+        result = data_quality(clickhouse=ClickhouseResource())
+    assert result is not None
