@@ -156,14 +156,15 @@ Replaces `int_market_regime_daily.sql`. The old file is updated to `SELECT * FRO
 - LQD 20d return > 0: +40
 - LQD above SMA50: +10
 
-**rates_score** (rising TLT = falling yields = flight to safety = risk-off → low score)
-- TLT above SMA50: −40 (inverted: bond rally = risk-off)
-- TLT 20d return > 2%: −20 (strong bond rally = fear)
-- TLT 20d return < −2%: +40 (bond selloff = growth/risk-on)
-- VNQ above SMA50: +20 (REITs rallying = rates benign)
-- Base: 50 (neutral if no signals fire)
+**rates_score** (combines yield direction via ^TNX with TLT flight-to-quality signal, confirmed by credit context)
+- `^TNX` 20d return < 0 (yields falling = rate relief): +30
+- `^TNX` 20d return > 1% (yields rising fast = rate pressure): −20
+- TLT 20d return > 2% AND credit_score >= 60 (bond rally in healthy credit env = benign easing): +20
+- TLT 20d return > 2% AND credit_score < 40 (bond rally + credit stress = flight to safety): −30
+- VNQ above SMA50 (rate-sensitive assets stable): +10
+- Base: 40
 - Clamp to [0, 100]
-- Note: `^TNX` is ingested but not used in scoring v1. It stores yield as a decimal price (e.g. 4.5 = 4.5%). Available for future enrichment (yield level regime, curve steepness).
+- Note: `^TNX` stores yield as price (4.5 = 4.5%). credit_score is computed first and passed as input to rates_score. TLT alone is ambiguous (falling yields can be growth-bullish or fear-driven); credit confirmation disambiguates.
 
 **inflation_score** (rising inflation = ambiguous, scored as drag on equity)
 - GLD 20d return > 3% AND CL=F 20d return > 3%: −40 (inflation spike = risk-off)
@@ -202,30 +203,52 @@ Replaces `int_market_regime_daily.sql`. The old file is updated to `SELECT * FRO
 
 ```
 composite_macro_score = (
-    credit_score   × 0.25
-  + growth_score   × 0.25
-  + rates_score    × 0.15
-  + dollar_score   × 0.15
-  + sector_score   × 0.15
-  + inflation_score × 0.05
+    credit_score    × 0.25
+  + growth_score    × 0.25
+  + dollar_score    × 0.15
+  + sector_score    × 0.15
+  + rates_score     × 0.10
+  + inflation_score × 0.10
 )
 ```
 
-### 5-State Regime Label
+Weights reflect: credit and growth are strongest leading indicators. Rates are included but down-weighted because rising rates can be both growth-bullish (expansion) and equity-bearish (tightening). Inflation similarly ambiguous — present enough to register commodity spikes, not enough to dominate.
+
+Weights sum to 1.00.
+
+### 5-State Dashboard Labels
 
 ```
-composite >= 80 → risk_on_strong
-composite >= 60 → risk_on
+composite >= 80 → risk_on
+composite >= 60 → constructive
 composite >= 40 → neutral
-composite >= 20 → risk_off
-composite <  20 → risk_off_stress
+composite >= 20 → defensive
+composite <  20 → risk_off
 ```
+
+### Hysteresis Bands (Strategy Gates)
+
+Dashboard labels use fixed thresholds above. For any future strategy logic using this regime, apply wider confirmation bands to reduce flip frequency:
+
+```
+enter risk_on:   score >= 70 (was constructive, now confirmed risk_on)
+exit risk_on:    score <  55
+enter risk_off:  score <= 30 (was defensive, now confirmed risk_off)
+exit risk_off:   score >  45
+```
+
+These bands are stored as constants in `mart_macro_regime_daily` (columns: `risk_on_entry_threshold=70`, `risk_on_exit_threshold=55`, `risk_off_entry_threshold=30`, `risk_off_exit_threshold=45`) so downstream consumers don't hardcode them.
 
 ### Output columns
 
 `ts, credit_score, rates_score, inflation_score, dollar_score, growth_score, sector_score, composite_macro_score, macro_regime (5-state), benchmark_close, benchmark_return_pct, benchmark_above_sma_200, risk_on_score (legacy compat field)`
 
-The legacy `market_regime` (3-state) and `risk_on_score` fields are populated from the new 5-state mapping for backward compatibility with existing downstream consumers.
+The legacy `market_regime` (3-state) and `risk_on_score` fields are populated from the new 5-state mapping for backward compatibility:
+```
+risk_on / constructive → risk_on (legacy)
+neutral               → neutral (legacy)
+defensive / risk_off  → risk_off (legacy)
+```
 
 ---
 
