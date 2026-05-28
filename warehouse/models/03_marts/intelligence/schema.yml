@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: mart_stock_intel_weekly
+    description: >
+      OBT: one row per (ticker, market, week). Extends mart_briefing_portfolio_weekly with
+      period_return_pct, score_delta, rank_delta, sector context, 5-state macro regime,
+      and action_signal (strong/rising/fading/weak/neutral).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, period_start]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: period_start
+        data_tests: [not_null]
+      - name: action_signal
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [strong, rising, fading, weak, neutral]
+      - name: macro_regime
+        data_tests:
+          - accepted_values:
+              values: [risk_on, constructive, neutral, defensive, risk_off]
+
+  - name: mart_stock_intel_monthly
+    description: >
+      OBT: one row per (ticker, market, month). Same structure as mart_stock_intel_weekly
+      at monthly cadence.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, period_start]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: period_start
+        data_tests: [not_null]
+      - name: action_signal
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [strong, rising, fading, weak, neutral]
+
+  - name: mart_stock_intel_quarterly
+    description: >
+      OBT: one row per (ticker, market, quarter). Same structure as mart_stock_intel_weekly
+      at quarterly cadence.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, period_start]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: period_start
+        data_tests: [not_null]
+      - name: action_signal
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [strong, rising, fading, weak, neutral]
+
+  - name: mart_stock_intel_6m
+    description: >
+      OBT: one row per (ticker, market, half-year). Same structure as mart_stock_intel_weekly
+      at 6-month cadence.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, period_start]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: period_start
+        data_tests: [not_null]
+      - name: action_signal
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [strong, rising, fading, weak, neutral]
