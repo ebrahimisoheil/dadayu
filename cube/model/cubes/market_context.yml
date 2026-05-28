@@ -1,0 +1,371 @@
+cubes:
+  - name: SectorContext
+    title: Sector Context (Weekly)
+    sql_table: dadayu.mart_sector_ranker_weekly
+
+    dimensions:
+      - name: id
+        sql: "market || '|' || sector || '|' || week_start::text"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: week_start
+        sql: week_start
+        type: time
+        title: Week Start
+
+      - name: score_date
+        sql: score_date
+        type: time
+        title: Score Date
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: top_ticker
+        sql: top_ticker
+        type: string
+        title: Top Ticker
+
+      - name: top_name
+        sql: top_name
+        type: string
+        title: Top Company
+
+      - name: sector_rank_in_market
+        sql: sector_rank_in_market
+        type: number
+        title: Sector Rank in Market
+
+      - name: sector_rank_overall
+        sql: sector_rank_overall
+        type: number
+        title: Sector Rank Overall
+
+      - name: weekly_sector_rank_in_market
+        sql: weekly_sector_rank_in_market
+        type: number
+        title: Weekly Rank in Market
+
+      - name: avg_total_score
+        sql: avg_total_score
+        type: number
+        title: Avg Score
+
+      - name: breadth_above_sma_200_pct
+        sql: breadth_above_sma_200_pct
+        type: number
+        title: Breadth Above SMA 200 %
+
+      - name: high_risk_pct
+        sql: high_risk_pct
+        type: number
+        title: High Risk %
+
+      - name: rankable_count
+        sql: rankable_count
+        type: number
+        title: Rankable Stocks
+
+      - name: asset_count
+        sql: asset_count
+        type: number
+        title: Total Stocks
+
+      - name: rank_badge
+        title: Rank Badge
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.sector_rank_in_market = 1"
+              label: "Gold #1"
+            - sql: "{CUBE}.sector_rank_in_market = 2"
+              label: "Silver #2"
+            - sql: "{CUBE}.sector_rank_in_market = 3"
+              label: "Bronze #3"
+          else:
+            label: "Other"
+
+      - name: strength_label
+        title: Sector Strength
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.avg_total_score >= 65"
+              label: "Strong"
+            - sql: "{CUBE}.avg_total_score >= 50"
+              label: "Moderate"
+            - sql: "{CUBE}.avg_total_score >= 35"
+              label: "Weak"
+          else:
+            label: "Poor"
+
+      - name: breadth_label
+        title: Breadth Label
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.breadth_above_sma_200_pct >= 70"
+              label: "Broad Uptrend"
+            - sql: "{CUBE}.breadth_above_sma_200_pct >= 50"
+              label: "Mixed"
+            - sql: "{CUBE}.breadth_above_sma_200_pct >= 30"
+              label: "Mostly Below"
+          else:
+            label: "Downtrend"
+
+    measures:
+      - name: count
+        type: count
+        public: false
+
+      - name: avg_sector_score
+        sql: avg_total_score
+        type: avg
+        title: Avg Sector Score
+
+      - name: avg_breadth
+        sql: breadth_above_sma_200_pct
+        type: avg
+        title: Avg Breadth Above SMA 200 %
+
+      - name: avg_high_risk_pct
+        sql: high_risk_pct
+        type: avg
+        title: Avg High Risk %
+
+      - name: total_stocks
+        sql: asset_count
+        type: sum
+        title: Total Stocks
+
+    segments:
+      - name: us_market
+        sql: "{CUBE}.market = 'us'"
+        title: US Market
+
+      - name: germany_market
+        sql: "{CUBE}.market = 'germany'"
+        title: Germany Market
+
+      - name: top3_sectors
+        sql: "{CUBE}.sector_rank_in_market <= 3"
+        title: Top 3 Sectors
+
+      - name: strong_breadth
+        sql: "{CUBE}.breadth_above_sma_200_pct >= 60"
+        title: Strong Breadth
+
+    pre_aggregations:
+      - name: sector_ranking_history
+        type: rollup
+        dimensions:
+          - CUBE.market
+          - CUBE.sector
+          - CUBE.strength_label
+        measures:
+          - CUBE.avg_sector_score
+          - CUBE.avg_breadth
+          - CUBE.avg_high_risk_pct
+        time_dimension: CUBE.week_start
+        granularity: week
+        partition_granularity: quarter
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+  - name: IndustryContext
+    title: Industry Context (Weekly)
+    sql_table: dadayu.mart_industry_ranker_weekly
+
+    dimensions:
+      - name: id
+        sql: "market || '|' || sector || '|' || industry || '|' || week_start::text"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: week_start
+        sql: week_start
+        type: time
+        title: Week Start
+
+      - name: score_date
+        sql: score_date
+        type: time
+        title: Score Date
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: industry
+        sql: industry
+        type: string
+        title: Industry
+
+      - name: top_ticker
+        sql: top_ticker
+        type: string
+        title: Top Ticker
+
+      - name: top_name
+        sql: top_name
+        type: string
+        title: Top Company
+
+      - name: industry_rank_in_market
+        sql: industry_rank_in_market
+        type: number
+        title: Industry Rank in Market
+
+      - name: industry_rank_in_sector
+        sql: industry_rank_in_sector
+        type: number
+        title: Industry Rank in Sector
+
+      - name: avg_total_score
+        sql: avg_total_score
+        type: number
+        title: Avg Score
+
+      - name: breadth_above_sma_200_pct
+        sql: breadth_above_sma_200_pct
+        type: number
+        title: Breadth Above SMA 200 %
+
+      - name: rankable_count
+        sql: rankable_count
+        type: number
+        title: Rankable Stocks
+
+      - name: strength_label
+        title: Industry Strength
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.avg_total_score >= 65"
+              label: "Strong"
+            - sql: "{CUBE}.avg_total_score >= 50"
+              label: "Moderate"
+            - sql: "{CUBE}.avg_total_score >= 35"
+              label: "Weak"
+          else:
+            label: "Poor"
+
+    measures:
+      - name: count
+        type: count
+        public: false
+
+      - name: avg_industry_score
+        sql: avg_total_score
+        type: avg
+        title: Avg Industry Score
+
+      - name: avg_breadth
+        sql: breadth_above_sma_200_pct
+        type: avg
+        title: Avg Breadth Above SMA 200 %
+
+    segments:
+      - name: us_market
+        sql: "{CUBE}.market = 'us'"
+        title: US Market
+
+      - name: germany_market
+        sql: "{CUBE}.market = 'germany'"
+        title: Germany Market
+
+      - name: top5_industries
+        sql: "{CUBE}.industry_rank_in_market <= 5"
+        title: Top 5 Industries
+
+    pre_aggregations:
+      - name: industry_ranking_history
+        type: rollup
+        dimensions:
+          - CUBE.market
+          - CUBE.sector
+          - CUBE.industry
+          - CUBE.strength_label
+        measures:
+          - CUBE.avg_industry_score
+          - CUBE.avg_breadth
+        time_dimension: CUBE.week_start
+        granularity: week
+        partition_granularity: quarter
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+  - name: UniverseHealth
+    title: Universe Health
+    sql_table: dadayu.mart_universe_health_current
+
+    dimensions:
+      - name: ticker
+        sql: ticker
+        type: string
+        primary_key: true
+        title: Ticker
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: name
+        sql: name
+        type: string
+        title: Company Name
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: universe_status
+        sql: universe_status
+        type: string
+        title: Universe Status
+
+    measures:
+      - name: count
+        type: count
+        title: Ticker Count
+        drill_members: [ticker, name, sector, universe_status]
+
+      - name: ok_count
+        sql: "CASE WHEN {CUBE}.universe_status = 'ok' THEN 1 END"
+        type: count
+        title: Healthy Tickers
+
+      - name: not_rankable_count
+        sql: "CASE WHEN {CUBE}.universe_status = 'not_rankable_latest' THEN 1 END"
+        type: count
+        title: Not Rankable
+
+      - name: missing_metadata_count
+        sql: "CASE WHEN {CUBE}.universe_status = 'missing_sector_or_industry' THEN 1 END"
+        type: count
+        title: Missing Metadata
+
+      - name: no_price_count
+        sql: "CASE WHEN {CUBE}.universe_status = 'no_price_history' THEN 1 END"
+        type: count
+        title: No Price History

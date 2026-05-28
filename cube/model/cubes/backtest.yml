@@ -1,0 +1,406 @@
+cubes:
+  - name: BacktestPerformance
+    title: Backtest Strategy Performance
+    sql_table: dadayu.mart_backtest_performance
+
+    dimensions:
+      - name: backtest_id
+        sql: backtest_id
+        type: string
+        primary_key: true
+        title: Strategy ID
+
+      - name: strategy_family
+        sql: strategy_family
+        type: string
+        title: Strategy Family
+
+      - name: rebalance_frequency
+        sql: rebalance_frequency
+        type: string
+        title: Rebalance Frequency
+
+      - name: portfolio_size
+        sql: "portfolio_size::text"
+        type: string
+        title: Portfolio Size
+
+      - name: universe_scope
+        sql: universe_scope
+        type: string
+        title: Universe Scope
+
+      - name: exposure_policy
+        sql: exposure_policy
+        type: string
+        title: Exposure Policy
+
+      - name: start_date
+        sql: start_date
+        type: time
+        title: Backtest Start
+
+      - name: end_date
+        sql: end_date
+        type: time
+        title: Backtest End
+
+      - name: elapsed_days
+        sql: elapsed_days
+        type: number
+        title: Elapsed Days
+
+      - name: sharpe_ratio
+        sql: sharpe_ratio
+        type: number
+        title: Sharpe Ratio
+
+      - name: annualized_return_pct
+        sql: annualized_return_pct
+        type: number
+        title: Annualized Return %
+
+      - name: max_drawdown_pct
+        sql: max_drawdown_pct
+        type: number
+        title: Max Drawdown %
+
+      - name: annualized_cost_drag_bps
+        sql: annualized_cost_drag_bps
+        type: number
+        title: Annual Cost Drag (bps)
+
+      - name: final_value
+        sql: final_value
+        type: number
+        title: Final Portfolio Value
+
+      - name: is_production_candidate
+        sql: is_production_candidate
+        type: boolean
+        title: Production Candidate
+
+      - name: performance_tier
+        title: Performance Tier
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.sharpe_ratio >= 2.0"
+              label: "Exceptional (Sharpe ≥2)"
+            - sql: "{CUBE}.sharpe_ratio >= 1.5"
+              label: "Strong (Sharpe 1.5-2)"
+            - sql: "{CUBE}.sharpe_ratio >= 1.0"
+              label: "Good (Sharpe 1-1.5)"
+          else:
+            label: "Below Target"
+
+      - name: risk_profile
+        title: Risk Profile
+        type: string
+        case:
+          when:
+            - sql: "ABS({CUBE}.max_drawdown_pct) <= 20"
+              label: "Conservative (<20% DD)"
+            - sql: "ABS({CUBE}.max_drawdown_pct) <= 35"
+              label: "Moderate (20-35% DD)"
+          else:
+            label: "Aggressive (>35% DD)"
+
+      - name: cost_tier
+        title: Cost Tier
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.annualized_cost_drag_bps <= 150"
+              label: "Low Cost (<150bps)"
+            - sql: "{CUBE}.annualized_cost_drag_bps <= 400"
+              label: "Medium Cost"
+            - sql: "{CUBE}.annualized_cost_drag_bps <= 700"
+              label: "High Cost"
+          else:
+            label: "Very High Cost (>700bps)"
+
+    measures:
+      - name: count
+        type: count
+        title: Strategy Count
+
+      - name: avg_sharpe
+        sql: sharpe_ratio
+        type: avg
+        title: Avg Sharpe Ratio
+
+      - name: best_sharpe
+        sql: sharpe_ratio
+        type: max
+        title: Best Sharpe Ratio
+
+      - name: avg_annual_return
+        sql: annualized_return_pct
+        type: avg
+        title: Avg Annual Return %
+
+      - name: avg_max_drawdown
+        sql: max_drawdown_pct
+        type: avg
+        title: Avg Max Drawdown %
+
+      - name: avg_cost_drag_bps
+        sql: annualized_cost_drag_bps
+        type: avg
+        title: Avg Annual Cost (bps)
+
+      - name: production_candidate_count
+        sql: "CASE WHEN {CUBE}.is_production_candidate = true THEN 1 END"
+        type: count
+        title: Production Candidates
+
+    segments:
+      - name: production_only
+        sql: "{CUBE}.is_production_candidate = true"
+        title: Production Candidates Only
+
+      - name: monthly_rebalance
+        sql: "{CUBE}.rebalance_frequency = 'monthly'"
+        title: Monthly Strategies
+
+      - name: quarterly_rebalance
+        sql: "{CUBE}.rebalance_frequency = 'quarterly'"
+        title: Quarterly Strategies
+
+      - name: top10_portfolio
+        sql: "{CUBE}.portfolio_size = 10"
+        title: Top 10 Portfolio
+
+      - name: low_cost
+        sql: "{CUBE}.annualized_cost_drag_bps <= 300"
+        title: Low Cost Strategies
+
+    pre_aggregations:
+      - name: strategy_comparison
+        type: original_sql
+        scheduled_refresh: true
+        refresh_key:
+          every: 24 hours
+
+  - name: BacktestTrades
+    title: Backtest Trades
+    sql_table: dadayu.mart_backtest_trades
+
+    joins:
+      - name: BacktestPerformance
+        relationship: many_to_one
+        sql: "{CUBE}.backtest_id = {BacktestPerformance}.backtest_id"
+
+    dimensions:
+      - name: id
+        sql: "backtest_id || '|' || rebalance_date::text || '|' || ticker || '|' || market"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: backtest_id
+        sql: backtest_id
+        type: string
+        title: Strategy ID
+
+      - name: strategy_family
+        sql: strategy_family
+        type: string
+        title: Strategy Family
+
+      - name: rebalance_frequency
+        sql: rebalance_frequency
+        type: string
+        title: Rebalance Frequency
+
+      - name: portfolio_size
+        sql: "portfolio_size::text"
+        type: string
+        title: Portfolio Size
+
+      - name: ticker
+        sql: ticker
+        type: string
+        title: Ticker
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: asset_type
+        sql: asset_type
+        type: string
+        title: Asset Type
+
+      - name: risk_bucket
+        sql: risk_bucket
+        type: string
+        title: Risk Bucket at Entry
+
+      - name: rebalance_date
+        sql: rebalance_date
+        type: time
+        title: Rebalance Date
+
+      - name: entry_date
+        sql: entry_date
+        type: time
+        title: Entry Date
+
+      - name: exit_date
+        sql: exit_date
+        type: time
+        title: Exit Date
+
+      - name: signal_rank
+        sql: signal_rank
+        type: number
+        title: Signal Rank at Entry
+
+      - name: holding_days
+        sql: holding_days
+        type: number
+        title: Holding Days
+
+      - name: entry_price
+        sql: entry_price
+        type: number
+        title: Entry Price
+
+      - name: exit_price
+        sql: exit_price
+        type: number
+        title: Exit Price
+
+      - name: gross_return_pct
+        sql: gross_return_pct
+        type: number
+        title: Gross Return %
+
+      - name: net_return_pct
+        sql: net_return_pct
+        type: number
+        title: Net Return %
+
+      - name: total_cost_pct
+        sql: total_cost_pct
+        type: number
+        title: Total Cost %
+
+      - name: return_year
+        sql: "extract(year from {CUBE}.entry_date)::text"
+        type: string
+        title: Entry Year
+
+      - name: trade_outcome
+        title: Trade Outcome
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.net_return_pct >= 0.10"
+              label: "Big Win (>10%)"
+            - sql: "{CUBE}.net_return_pct >= 0.02"
+              label: "Win (2-10%)"
+            - sql: "{CUBE}.net_return_pct >= -0.02"
+              label: "Flat"
+            - sql: "{CUBE}.net_return_pct >= -0.10"
+              label: "Loss (-2 to -10%)"
+          else:
+            label: "Big Loss (<-10%)"
+
+    measures:
+      - name: count
+        type: count
+        title: Trade Count
+        drill_members: [ticker, market, entry_date, net_return_pct, risk_bucket]
+
+      - name: avg_gross_return_pct
+        sql: "gross_return_pct * 100"
+        type: avg
+        title: Avg Gross Return %
+
+      - name: avg_net_return_pct
+        sql: "net_return_pct * 100"
+        type: avg
+        title: Avg Net Return %
+
+      - name: avg_cost_pct
+        sql: "total_cost_pct * 100"
+        type: avg
+        title: Avg Trade Cost %
+
+      - name: avg_holding_days
+        sql: holding_days
+        type: avg
+        title: Avg Holding Days
+
+      - name: winning_trades
+        sql: "CASE WHEN {CUBE}.net_return_pct > 0 THEN 1 END"
+        type: count
+        title: Winning Trades
+
+      - name: losing_trades
+        sql: "CASE WHEN {CUBE}.net_return_pct < 0 THEN 1 END"
+        type: count
+        title: Losing Trades
+
+    segments:
+      - name: winning_only
+        sql: "{CUBE}.net_return_pct > 0"
+        title: Winning Trades Only
+
+      - name: losing_only
+        sql: "{CUBE}.net_return_pct < 0"
+        title: Losing Trades Only
+
+      - name: monthly_strategies
+        sql: "{CUBE}.rebalance_frequency = 'monthly'"
+        title: Monthly Strategies
+
+      - name: high_risk_entries
+        sql: "{CUBE}.risk_bucket = 'high'"
+        title: High Risk Entries
+
+    pre_aggregations:
+      - name: monthly_trade_summary
+        type: rollup
+        dimensions:
+          - CUBE.backtest_id
+          - CUBE.strategy_family
+          - CUBE.rebalance_frequency
+          - CUBE.market
+          - CUBE.risk_bucket
+          - CUBE.trade_outcome
+        measures:
+          - CUBE.count
+          - CUBE.avg_net_return_pct
+          - CUBE.avg_gross_return_pct
+          - CUBE.avg_cost_pct
+          - CUBE.winning_trades
+          - CUBE.losing_trades
+          - CUBE.avg_holding_days
+        time_dimension: CUBE.entry_date
+        granularity: month
+        partition_granularity: year
+        scheduled_refresh: true
+        refresh_key:
+          every: 24 hours
+
+      - name: ticker_contribution
+        type: rollup
+        dimensions:
+          - CUBE.backtest_id
+          - CUBE.ticker
+          - CUBE.market
+          - CUBE.strategy_family
+          - CUBE.return_year
+        measures:
+          - CUBE.count
+          - CUBE.avg_net_return_pct
+          - CUBE.winning_trades
+          - CUBE.losing_trades
+        scheduled_refresh: true
+        refresh_key:
+          every: 24 hours

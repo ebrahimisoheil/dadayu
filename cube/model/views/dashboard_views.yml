@@ -1,0 +1,248 @@
+views:
+  # ─── Current Week Snapshot ─────────────────────────────────────────────────
+  # Query this for "What's happening right now" dashboard pages.
+  # Filter: period_start = latest week. No JOIN needed.
+
+  - name: CurrentWeekSnapshot
+    title: Current Week — Stock Snapshot
+    description: >
+      Stock intelligence for the latest weekly period only.
+      All signals, scores, risk, sector, macro regime in one flat query.
+      Use for: top stock tables, signal distribution charts, risk heatmaps.
+
+    cubes:
+      - join_path: StockIntelligence
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - period_start
+          - score_date
+          - action_signal
+          - risk_bucket
+          - macro_regime
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - return_direction
+          - sector_rank_label
+          - total_score
+          - momentum_score
+          - trend_score
+          - rsi_score
+          - macd_score
+          - cmo_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_rank_in_market
+          - sector_rank_in_market
+          - atr_pct
+          - volatility_pct_in_sector
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_50
+          - sma_200
+          - sector_avg_score
+          - industry_momentum_pct_rank
+          - composite_macro_score
+          - benchmark_return_20d_pct
+          - is_rankable
+          - quality_reasons
+          - count
+          - avg_total_score
+          - avg_period_return_pct
+          - strong_count
+          - rising_count
+          - fading_count
+          - weak_count
+          - high_risk_count
+          - low_risk_count
+          - above_sma200_count
+          - rankable_count
+
+  # ─── Market Overview ───────────────────────────────────────────────────────
+  # What is the market environment right now?
+
+  - name: MarketOverview
+    title: Market Overview
+    description: >
+      Combines macro regime with market breadth.
+      Use for: macro dashboard panels, market health scorecard,
+      regime-conditional alerts.
+
+    cubes:
+      - join_path: MacroRegime
+        includes:
+          - ts
+          - macro_regime
+          - market_regime
+          - regime_is_positive
+          - composite_macro_score
+          - composite_macro_score_30d_avg
+          - composite_macro_score_trend
+          - credit_score
+          - growth_score
+          - dollar_score
+          - sector_score
+          - rates_score
+          - inflation_score
+          - risk_on_entry_threshold
+          - risk_on_exit_threshold
+          - risk_off_entry_threshold
+          - risk_off_exit_threshold
+          - benchmark_close
+          - benchmark_above_sma_200
+          - avg_composite_score
+          - avg_credit_score
+          - avg_growth_score
+          - avg_dollar_score
+          - avg_rates_score
+          - avg_inflation_score
+          - avg_sector_score
+          - risk_on_days
+          - risk_off_days
+          - neutral_days
+
+  # ─── Sector Leaderboard ────────────────────────────────────────────────────
+  # Which sectors and industries are leading right now?
+
+  - name: SectorLeaderboard
+    title: Sector & Industry Leaderboard
+    description: >
+      Combined sector and breadth context. Use for sector rotation charts,
+      heatmaps, and industry drill-down tables.
+
+    cubes:
+      - join_path: SectorContext
+        includes:
+          - week_start
+          - market
+          - sector
+          - sector_rank_in_market
+          - rank_badge
+          - strength_label
+          - breadth_label
+          - avg_total_score
+          - breadth_above_sma_200_pct
+          - high_risk_pct
+          - rankable_count
+          - top_ticker
+          - top_name
+          - avg_sector_score
+          - avg_breadth
+
+  # ─── Top Research Ideas ────────────────────────────────────────────────────
+  # What should I research next? Best stocks in the universe.
+
+  - name: TopResearchIdeas
+    title: Top Research Ideas
+    description: >
+      Pre-filtered to actionable signals (strong + rising), rankable only,
+      latest weekly period. All context included. Use for recommendation
+      tables, stock cards, email digest generation.
+
+    cubes:
+      - join_path: StockIntelligence
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - period_start
+          - action_signal
+          - risk_bucket
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - total_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_200
+          - sector_avg_score
+          - sector_rank_in_market
+          - sector_rank_label
+          - macro_regime
+          - composite_macro_score
+          - atr_pct
+          - count
+          - avg_total_score
+          - avg_momentum_12_1
+          - strong_count
+          - rising_count
+
+  # ─── Strategy Comparison ──────────────────────────────────────────────────
+  # Which strategy should I follow?
+
+  - name: StrategyComparison
+    title: Backtest Strategy Comparison
+    description: >
+      All 48 strategy variants with performance metrics. Use for strategy
+      comparison tables, risk/return scatter plots, Sharpe leaderboards.
+
+    cubes:
+      - join_path: BacktestPerformance
+        includes:
+          - backtest_id
+          - strategy_family
+          - rebalance_frequency
+          - portfolio_size
+          - performance_tier
+          - risk_profile
+          - cost_tier
+          - is_production_candidate
+          - sharpe_ratio
+          - annualized_return_pct
+          - max_drawdown_pct
+          - annualized_cost_drag_bps
+          - elapsed_days
+          - count
+          - avg_sharpe
+          - best_sharpe
+          - avg_annual_return
+          - avg_max_drawdown
+          - production_candidate_count
+
+  # ─── Score History ─────────────────────────────────────────────────────────
+  # How has a stock's score evolved over time?
+
+  - name: ScoreHistory
+    title: Stock Score History (All Cadences)
+    description: >
+      Full score history across all cadences for any ticker. Use for
+      score trend charts, sparklines, and signal change timelines.
+      Filter by ticker + cadence for per-stock views.
+
+    cubes:
+      - join_path: StockIntelligence
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - cadence
+          - period_start
+          - action_signal
+          - score_tier
+          - rank_movement
+          - total_score
+          - momentum_score
+          - trend_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - macro_regime
+          - composite_macro_score
+          - avg_total_score
+          - avg_period_return_pct

@@ -1,10 +1,13 @@
 cubes:
   - name: MacroRegime
-    sql_table: dadayu.mart_macro_regime_daily
     title: Macro Regime
     description: >
-      Daily 6-dimension composite macro regime score (0-100) and 5-state label.
-      Covers credit, growth, dollar, sector, rates, inflation dimensions.
+      Daily 6-dimension composite macro environment score (0-100) with
+      5-state regime label. Covers credit, growth, dollar, sector, rates,
+      and inflation dimensions. Use for macro context panels, regime history
+      charts, and regime-conditional stock filtering.
+
+    sql_table: dadayu.mart_macro_regime_daily
 
     dimensions:
       - name: ts
@@ -13,57 +16,298 @@ cubes:
         title: Date
         primary_key: true
 
+      # ─── Regime Labels ──────────────────────────────────────────────────
+
       - name: macro_regime
         sql: macro_regime
         type: string
         title: Macro Regime (5-state)
+        description: "risk_on | constructive | neutral | defensive | risk_off"
+        meta:
+          color_map:
+            risk_on: "#15803d"
+            constructive: "#16a34a"
+            neutral: "#6b7280"
+            defensive: "#f59e0b"
+            risk_off: "#dc2626"
 
       - name: market_regime
         sql: market_regime
         type: string
         title: Market Regime (3-state)
+        description: "risk_on | neutral | risk_off"
 
-    measures:
+      # ─── Computed ───────────────────────────────────────────────────────
+
+      - name: regime_is_positive
+        title: Regime Positive?
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.macro_regime IN ('risk_on','constructive')"
+              label: "Positive"
+            - sql: "{CUBE}.macro_regime = 'neutral'"
+              label: "Neutral"
+          else:
+            label: "Negative"
+
+      - name: regime_quarter
+        sql: "date_trunc('quarter', {CUBE}.ts)::text"
+        type: string
+        title: Regime Quarter
+
+      # ─── Composite Scores ───────────────────────────────────────────────
+
       - name: composite_macro_score
         sql: composite_macro_score
-        type: avg
+        type: number
         title: Composite Score
+        meta:
+          min: 0
+          max: 100
+
+      - name: composite_macro_score_30d_avg
+        sql: composite_macro_score_30d_avg
+        type: number
+        title: Composite Score 30d Avg
+
+      - name: composite_macro_score_trend
+        sql: composite_macro_score_trend
+        type: number
+        title: Score Trend (vs 30d Avg)
+        description: "Positive = above 30d average (momentum)"
+
+      # ─── Dimension Scores ───────────────────────────────────────────────
 
       - name: credit_score
         sql: credit_score
-        type: avg
+        type: number
         title: Credit Score
+        description: "HYG + LQD return and SMA50. 0=stressed, 100=healthy"
+        meta:
+          min: 0
+          max: 100
 
       - name: growth_score
         sql: growth_score
-        type: avg
+        type: number
         title: Growth Score
+        description: "Industrial metals + EM breadth. Global growth proxy"
+        meta:
+          min: 0
+          max: 100
 
       - name: dollar_score
         sql: dollar_score
-        type: avg
+        type: number
         title: Dollar Score
-
-      - name: rates_score
-        sql: rates_score
-        type: avg
-        title: Rates Score
-
-      - name: inflation_score
-        sql: inflation_score
-        type: avg
-        title: Inflation Score
+        description: "Inverted: low score = strong dollar = risk-off"
+        meta:
+          min: 0
+          max: 100
 
       - name: sector_score
         sql: sector_score
-        type: avg
-        title: Sector Score
+        type: number
+        title: Sector Rotation Score
+        description: "Cyclicals leading = high score; defensives leading = low"
+        meta:
+          min: 0
+          max: 100
 
-      - name: avg_30d_score
-        sql: composite_macro_score_30d_avg
-        type: avg
-        title: 30-Day Avg Score
+      - name: rates_score
+        sql: rates_score
+        type: number
+        title: Rates Score
+        description: "Contextual: TLT rally during credit stress = negative"
+        meta:
+          min: 0
+          max: 100
 
+      - name: inflation_score
+        sql: inflation_score
+        type: number
+        title: Inflation Score
+        description: "High = disinflation; low = commodity spike / stagflation"
+        meta:
+          min: 0
+          max: 100
+
+      # ─── Thresholds (stored as constants) ──────────────────────────────
+
+      - name: risk_on_entry_threshold
+        sql: risk_on_entry_threshold
+        type: number
+        title: Risk-On Entry Threshold
+        description: "Enter risk-on positioning when composite >= this"
+
+      - name: risk_on_exit_threshold
+        sql: risk_on_exit_threshold
+        type: number
+        title: Risk-On Exit Threshold
+
+      - name: risk_off_entry_threshold
+        sql: risk_off_entry_threshold
+        type: number
+        title: Risk-Off Entry Threshold
+
+      - name: risk_off_exit_threshold
+        sql: risk_off_exit_threshold
+        type: number
+        title: Risk-Off Exit Threshold
+
+      # ─── Benchmark ──────────────────────────────────────────────────────
+
+      - name: benchmark_close
+        sql: benchmark_close
+        type: number
+        title: S&P 500 Close
+
+      - name: benchmark_return_pct
+        sql: "benchmark_return_pct * 100"
+        type: number
+        title: S&P 500 Daily Return %
+
+      - name: benchmark_above_sma_200
+        sql: benchmark_above_sma_200
+        type: boolean
+        title: S&P 500 Above SMA 200
+
+    # ─── Measures ─────────────────────────────────────────────────────────────
+
+    measures:
       - name: count
         type: count
+        title: Days
         public: false
+
+      - name: avg_composite_score
+        sql: composite_macro_score
+        type: avg
+        title: Avg Composite Score
+
+      - name: latest_composite_score
+        sql: composite_macro_score
+        type: max
+        title: Latest Composite Score
+        description: "Use with latest date filter for current reading"
+
+      - name: avg_credit_score
+        sql: credit_score
+        type: avg
+        title: Avg Credit Score
+
+      - name: avg_growth_score
+        sql: growth_score
+        type: avg
+        title: Avg Growth Score
+
+      - name: avg_dollar_score
+        sql: dollar_score
+        type: avg
+        title: Avg Dollar Score
+
+      - name: avg_rates_score
+        sql: rates_score
+        type: avg
+        title: Avg Rates Score
+
+      - name: avg_inflation_score
+        sql: inflation_score
+        type: avg
+        title: Avg Inflation Score
+
+      - name: avg_sector_score
+        sql: sector_score
+        type: avg
+        title: Avg Sector Score
+
+      - name: risk_on_days
+        sql: "CASE WHEN {CUBE}.macro_regime IN ('risk_on','constructive') THEN 1 END"
+        type: count
+        title: Risk-On Days
+
+      - name: risk_off_days
+        sql: "CASE WHEN {CUBE}.macro_regime IN ('risk_off','defensive') THEN 1 END"
+        type: count
+        title: Risk-Off Days
+
+      - name: neutral_days
+        sql: "CASE WHEN {CUBE}.macro_regime = 'neutral' THEN 1 END"
+        type: count
+        title: Neutral Days
+
+      - name: avg_sp500_return
+        sql: "benchmark_return_pct * 100"
+        type: avg
+        title: Avg S&P 500 Daily Return %
+
+    # ─── Segments ─────────────────────────────────────────────────────────────
+
+    segments:
+      - name: risk_on
+        sql: "{CUBE}.macro_regime IN ('risk_on','constructive')"
+        title: Risk-On Periods
+
+      - name: risk_off
+        sql: "{CUBE}.macro_regime IN ('risk_off','defensive')"
+        title: Risk-Off Periods
+
+      - name: neutral
+        sql: "{CUBE}.macro_regime = 'neutral'"
+        title: Neutral Periods
+
+      - name: above_threshold
+        sql: "{CUBE}.composite_macro_score >= 60"
+        title: Above Risk-On Entry Threshold
+
+      - name: trending_up
+        sql: "{CUBE}.composite_macro_score_trend > 0"
+        title: Score Trending Up (Above 30d Avg)
+
+    # ─── Pre-aggregations ─────────────────────────────────────────────────────
+
+    pre_aggregations:
+      - name: monthly_regime_history
+        type: rollup
+        dimensions:
+          - CUBE.macro_regime
+          - CUBE.market_regime
+          - CUBE.regime_is_positive
+        measures:
+          - CUBE.avg_composite_score
+          - CUBE.avg_credit_score
+          - CUBE.avg_growth_score
+          - CUBE.avg_dollar_score
+          - CUBE.avg_rates_score
+          - CUBE.avg_inflation_score
+          - CUBE.avg_sector_score
+          - CUBE.risk_on_days
+          - CUBE.risk_off_days
+          - CUBE.avg_sp500_return
+        time_dimension: CUBE.ts
+        granularity: month
+        partition_granularity: year
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+      - name: daily_scores
+        type: rollup
+        dimensions:
+          - CUBE.macro_regime
+          - CUBE.market_regime
+        measures:
+          - CUBE.avg_composite_score
+          - CUBE.avg_credit_score
+          - CUBE.avg_growth_score
+          - CUBE.avg_dollar_score
+          - CUBE.avg_inflation_score
+          - CUBE.avg_rates_score
+          - CUBE.avg_sector_score
+        time_dimension: CUBE.ts
+        granularity: day
+        partition_granularity: month
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour

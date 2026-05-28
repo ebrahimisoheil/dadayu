@@ -1,0 +1,698 @@
+cubes:
+  - name: StockIntelligence
+    title: Stock Intelligence
+    description: >
+      Unified OBT across all 4 cadences (weekly/monthly/quarterly/6m).
+      One row per (ticker, market, cadence, period_start). Contains scores,
+      signals, risk, sector context, macro regime, and period-over-period
+      deltas. Primary cube for all stock-level dashboard components.
+
+    sql: >
+      SELECT * FROM dadayu.mart_stock_intel_weekly
+      UNION ALL
+      SELECT * FROM dadayu.mart_stock_intel_monthly
+      UNION ALL
+      SELECT * FROM dadayu.mart_stock_intel_quarterly
+      UNION ALL
+      SELECT * FROM dadayu.mart_stock_intel_6m
+
+    # ─── Identity ──────────────────────────────────────────────────────────────
+
+    dimensions:
+      - name: id
+        sql: "ticker || '|' || market || '|' || cadence || '|' || period_start::text"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: ticker
+        sql: ticker
+        type: string
+        title: Ticker
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+        description: "us or germany"
+
+      - name: name
+        sql: name
+        type: string
+        title: Company Name
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: industry
+        sql: industry
+        type: string
+        title: Industry
+
+      - name: asset_type
+        sql: asset_type
+        type: string
+        title: Asset Type
+        public: false
+
+    # ─── Time ──────────────────────────────────────────────────────────────────
+
+      - name: period_start
+        sql: period_start
+        type: time
+        title: Period Start
+
+      - name: period_end
+        sql: period_end
+        type: time
+        title: Period End
+
+      - name: score_date
+        sql: score_date
+        type: time
+        title: Score Date
+
+    # ─── Cadence ───────────────────────────────────────────────────────────────
+
+      - name: cadence
+        sql: cadence
+        type: string
+        title: Cadence
+        description: "weekly | monthly | quarterly | 6m"
+
+    # ─── Signals & Classification ──────────────────────────────────────────────
+
+      - name: action_signal
+        sql: action_signal
+        type: string
+        title: Action Signal
+        description: "strong | rising | fading | weak | neutral"
+        meta:
+          color_map:
+            strong: "#16a34a"
+            rising: "#2563eb"
+            fading: "#f59e0b"
+            weak: "#dc2626"
+            neutral: "#6b7280"
+
+      - name: risk_bucket
+        sql: risk_bucket
+        type: string
+        title: Risk Bucket
+        description: "low | medium | high"
+        meta:
+          color_map:
+            low: "#16a34a"
+            medium: "#f59e0b"
+            high: "#dc2626"
+
+      - name: macro_regime
+        sql: macro_regime
+        type: string
+        title: Macro Regime (5-state)
+        description: "risk_on | constructive | neutral | defensive | risk_off"
+
+      - name: market_regime
+        sql: market_regime
+        type: string
+        title: Market Regime (3-state)
+        description: "risk_on | neutral | risk_off"
+
+    # ─── Computed Classifications (for charts / filters) ───────────────────────
+
+      - name: score_tier
+        title: Score Tier
+        type: string
+        description: "A (≥70) B (60-69) C (50-59) D (<50)"
+        case:
+          when:
+            - sql: "{CUBE}.total_score >= 70"
+              label: "A — Strong"
+            - sql: "{CUBE}.total_score >= 60"
+              label: "B — Good"
+            - sql: "{CUBE}.total_score >= 50"
+              label: "C — Neutral"
+            - sql: "{CUBE}.total_score >= 40"
+              label: "D — Weak"
+          else:
+            label: "E — Poor"
+
+      - name: rank_movement
+        title: Rank Movement
+        type: string
+        description: "Direction of rank change vs previous period"
+        case:
+          when:
+            - sql: "{CUBE}.rank_delta <= -30"
+              label: "Strong Climb"
+            - sql: "{CUBE}.rank_delta <= -10"
+              label: "Climbing"
+            - sql: "{CUBE}.rank_delta <= 10"
+              label: "Stable"
+            - sql: "{CUBE}.rank_delta <= 30"
+              label: "Slipping"
+          else:
+            label: "Falling"
+
+      - name: momentum_label
+        title: Momentum Category
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.momentum_12_1_pct >= 100"
+              label: "Explosive (>100%)"
+            - sql: "{CUBE}.momentum_12_1_pct >= 50"
+              label: "Strong (50-100%)"
+            - sql: "{CUBE}.momentum_12_1_pct >= 20"
+              label: "Moderate (20-50%)"
+            - sql: "{CUBE}.momentum_12_1_pct >= 0"
+              label: "Mild (0-20%)"
+          else:
+            label: "Negative"
+
+      - name: return_direction
+        title: Period Return Direction
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.period_return_pct > 0.05"
+              label: "Up >5%"
+            - sql: "{CUBE}.period_return_pct > 0"
+              label: "Up 0-5%"
+            - sql: "{CUBE}.period_return_pct = 0"
+              label: "Flat"
+            - sql: "{CUBE}.period_return_pct > -0.05"
+              label: "Down 0-5%"
+          else:
+            label: "Down >5%"
+
+      - name: sector_rank_label
+        title: Sector Standing
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.sector_rank_in_market = 1"
+              label: "Top Sector"
+            - sql: "{CUBE}.sector_rank_in_market <= 3"
+              label: "Top 3 Sector"
+            - sql: "{CUBE}.sector_rank_in_market <= 5"
+              label: "Top 5 Sector"
+          else:
+            label: "Other"
+
+      - name: period_return_pct
+        sql: "period_return_pct * 100"
+        type: number
+        title: Period Return %
+        format: percent
+
+    # ─── Raw Scores ────────────────────────────────────────────────────────────
+
+      - name: total_score
+        sql: total_score
+        type: number
+        title: Total Score
+        format: number
+        meta:
+          min: 0
+          max: 100
+
+      - name: momentum_score
+        sql: momentum_score
+        type: number
+        title: Momentum Score
+
+      - name: cmo_score
+        sql: cmo_score
+        type: number
+        title: CMO Score
+
+      - name: rsi_score
+        sql: rsi_score
+        type: number
+        title: RSI Score
+
+      - name: macd_score
+        sql: macd_score
+        type: number
+        title: MACD Score
+
+      - name: trend_score
+        sql: trend_score
+        type: number
+        title: Trend Score
+
+    # ─── Delta (period-over-period) ────────────────────────────────────────────
+
+      - name: score_delta
+        sql: score_delta
+        type: number
+        title: Score Change vs Previous Period
+
+      - name: rank_delta
+        sql: rank_delta
+        type: number
+        title: Rank Change vs Previous Period
+        description: "Negative = rank improved"
+
+    # ─── Rank ──────────────────────────────────────────────────────────────────
+
+      - name: overall_rank
+        sql: overall_rank
+        type: number
+        title: Overall Rank
+
+      - name: momentum_rank_in_market
+        sql: momentum_rank_in_market
+        type: number
+        title: Momentum Rank in Market
+
+      - name: sector_rank_in_market
+        sql: sector_rank_in_market
+        type: number
+        title: Sector Rank in Market
+
+    # ─── Risk & Volatility ────────────────────────────────────────────────────
+
+      - name: atr_pct
+        sql: "atr_pct * 100"
+        type: number
+        title: ATR %
+        format: percent
+
+      - name: volatility_pct_in_sector
+        sql: "volatility_pct_in_sector * 100"
+        type: number
+        title: Volatility vs Sector %
+        format: percent
+
+    # ─── Technical Indicators (raw) ───────────────────────────────────────────
+
+      - name: rsi_14
+        sql: rsi_14
+        type: number
+        title: RSI 14
+
+      - name: macd_hist
+        sql: macd_hist
+        type: number
+        title: MACD Histogram
+
+      - name: cmo_10
+        sql: cmo_10
+        type: number
+        title: CMO 10
+
+      - name: momentum_12_1_pct
+        sql: momentum_12_1_pct
+        type: number
+        title: 12-1 Momentum %
+        format: percent
+
+      - name: close
+        sql: close
+        type: number
+        title: Close Price
+
+      - name: sma_20
+        sql: sma_20
+        type: number
+        title: SMA 20
+
+      - name: sma_50
+        sql: sma_50
+        type: number
+        title: SMA 50
+
+      - name: sma_200
+        sql: sma_200
+        type: number
+        title: SMA 200
+
+    # ─── Context ──────────────────────────────────────────────────────────────
+
+      - name: sector_avg_score
+        sql: sector_avg_score
+        type: number
+        title: Sector Avg Score
+
+      - name: industry_momentum_pct_rank
+        sql: "industry_momentum_pct_rank * 100"
+        type: number
+        title: Industry Momentum Percentile %
+        format: percent
+
+      - name: composite_macro_score
+        sql: composite_macro_score
+        type: number
+        title: Macro Score
+
+      - name: benchmark_return_20d_pct
+        sql: "benchmark_return_20d_pct * 100"
+        type: number
+        title: S&P 500 20d Return %
+        format: percent
+
+    # ─── Quality Flags ────────────────────────────────────────────────────────
+
+      - name: is_rankable
+        sql: is_rankable
+        type: boolean
+        title: Is Rankable
+
+      - name: is_backtest_tradable
+        sql: is_backtest_tradable
+        type: boolean
+        title: Is Backtest Tradable
+
+      - name: quality_reasons
+        sql: quality_reasons
+        type: string
+        title: Quality Issues
+
+    # ─── Measures ─────────────────────────────────────────────────────────────
+
+    measures:
+      - name: count
+        type: count
+        title: Stock Count
+        drill_members:
+          - ticker
+          - name
+          - sector
+          - action_signal
+          - total_score
+          - risk_bucket
+
+      - name: avg_total_score
+        sql: total_score
+        type: avg
+        title: Avg Total Score
+        format: number
+        drill_members:
+          - ticker
+          - name
+          - total_score
+          - action_signal
+
+      - name: max_total_score
+        sql: total_score
+        type: max
+        title: Max Total Score
+
+      - name: min_total_score
+        sql: total_score
+        type: min
+        title: Min Total Score
+
+      - name: avg_momentum_score
+        sql: momentum_score
+        type: avg
+        title: Avg Momentum Score
+
+      - name: avg_period_return_pct
+        sql: "period_return_pct * 100"
+        type: avg
+        title: Avg Period Return %
+        format: percent
+
+      - name: avg_momentum_12_1
+        sql: momentum_12_1_pct
+        type: avg
+        title: Avg 12-1 Momentum %
+        format: percent
+
+      - name: avg_rank
+        sql: overall_rank
+        type: avg
+        title: Avg Overall Rank
+
+      - name: avg_atr_pct
+        sql: "atr_pct * 100"
+        type: avg
+        title: Avg ATR %
+        format: percent
+
+      - name: avg_composite_macro_score
+        sql: composite_macro_score
+        type: avg
+        title: Avg Macro Score
+
+      - name: avg_score_delta
+        sql: score_delta
+        type: avg
+        title: Avg Score Change
+
+      # ─── Signal counts ──────────────────────────────────────────────────
+
+      - name: strong_count
+        sql: "CASE WHEN {CUBE}.action_signal = 'strong' THEN 1 END"
+        type: count
+        title: Strong Count
+        drill_members: [ticker, name, sector, total_score, rank_delta]
+
+      - name: rising_count
+        sql: "CASE WHEN {CUBE}.action_signal = 'rising' THEN 1 END"
+        type: count
+        title: Rising Count
+        drill_members: [ticker, name, sector, total_score, rank_delta]
+
+      - name: fading_count
+        sql: "CASE WHEN {CUBE}.action_signal = 'fading' THEN 1 END"
+        type: count
+        title: Fading Count
+        drill_members: [ticker, name, sector, total_score, rank_delta]
+
+      - name: weak_count
+        sql: "CASE WHEN {CUBE}.action_signal = 'weak' THEN 1 END"
+        type: count
+        title: Weak Count
+        drill_members: [ticker, name, sector, total_score]
+
+      - name: neutral_count
+        sql: "CASE WHEN {CUBE}.action_signal = 'neutral' THEN 1 END"
+        type: count
+        title: Neutral Count
+
+      # ─── Risk counts ────────────────────────────────────────────────────
+
+      - name: high_risk_count
+        sql: "CASE WHEN {CUBE}.risk_bucket = 'high' THEN 1 END"
+        type: count
+        title: High Risk Count
+
+      - name: medium_risk_count
+        sql: "CASE WHEN {CUBE}.risk_bucket = 'medium' THEN 1 END"
+        type: count
+        title: Medium Risk Count
+
+      - name: low_risk_count
+        sql: "CASE WHEN {CUBE}.risk_bucket = 'low' THEN 1 END"
+        type: count
+        title: Low Risk Count
+
+      # ─── Breadth ────────────────────────────────────────────────────────
+
+      - name: above_sma200_count
+        sql: "CASE WHEN {CUBE}.close > {CUBE}.sma_200 THEN 1 END"
+        type: count
+        title: Above SMA200 Count
+
+      - name: above_sma50_count
+        sql: "CASE WHEN {CUBE}.close > {CUBE}.sma_50 THEN 1 END"
+        type: count
+        title: Above SMA50 Count
+
+      - name: positive_return_count
+        sql: "CASE WHEN {CUBE}.period_return_pct > 0 THEN 1 END"
+        type: count
+        title: Positive Return Count
+
+      - name: rankable_count
+        sql: "CASE WHEN {CUBE}.is_rankable = true THEN 1 END"
+        type: count
+        title: Rankable Count
+
+      # ─── Regime counts ──────────────────────────────────────────────────
+
+      - name: risk_on_regime_count
+        sql: "CASE WHEN {CUBE}.macro_regime IN ('risk_on','constructive') THEN 1 END"
+        type: count
+        title: Risk-On Regime Days
+
+      - name: risk_off_regime_count
+        sql: "CASE WHEN {CUBE}.macro_regime IN ('risk_off','defensive') THEN 1 END"
+        type: count
+        title: Risk-Off Regime Days
+
+    # ─── Segments ─────────────────────────────────────────────────────────────
+
+    segments:
+      - name: rankable_only
+        sql: "{CUBE}.is_rankable = true"
+        title: Rankable Stocks Only
+
+      - name: tradable_only
+        sql: "{CUBE}.is_backtest_tradable = true"
+        title: Tradable Stocks Only
+
+      - name: us_market
+        sql: "{CUBE}.market = 'us'"
+        title: US Market
+
+      - name: germany_market
+        sql: "{CUBE}.market = 'germany'"
+        title: Germany Market
+
+      - name: weekly_cadence
+        sql: "{CUBE}.cadence = 'weekly'"
+        title: Weekly Cadence
+
+      - name: monthly_cadence
+        sql: "{CUBE}.cadence = 'monthly'"
+        title: Monthly Cadence
+
+      - name: quarterly_cadence
+        sql: "{CUBE}.cadence = 'quarterly'"
+        title: Quarterly Cadence
+
+      - name: cadence_6m
+        sql: "{CUBE}.cadence = '6m'"
+        title: 6-Month Cadence
+
+      - name: strong_signal
+        sql: "{CUBE}.action_signal = 'strong'"
+        title: Strong Signal
+
+      - name: rising_signal
+        sql: "{CUBE}.action_signal = 'rising'"
+        title: Rising Signal
+
+      - name: actionable_signal
+        sql: "{CUBE}.action_signal IN ('strong','rising')"
+        title: Actionable Signals (Strong + Rising)
+
+      - name: watch_signal
+        sql: "{CUBE}.action_signal IN ('fading','weak')"
+        title: Watch Signals (Fading + Weak)
+
+      - name: high_risk
+        sql: "{CUBE}.risk_bucket = 'high'"
+        title: High Risk
+
+      - name: low_risk
+        sql: "{CUBE}.risk_bucket = 'low'"
+        title: Low Risk
+
+      - name: risk_on_macro
+        sql: "{CUBE}.macro_regime IN ('risk_on','constructive')"
+        title: Risk-On Macro Environment
+
+      - name: risk_off_macro
+        sql: "{CUBE}.macro_regime IN ('risk_off','defensive')"
+        title: Risk-Off Macro Environment
+
+      - name: above_sma200
+        sql: "{CUBE}.close > {CUBE}.sma_200"
+        title: Above 200-Day SMA
+
+      - name: top_quartile
+        sql: "{CUBE}.total_score >= 60"
+        title: Top Quartile (Score ≥60)
+
+    # ─── Pre-aggregations ─────────────────────────────────────────────────────
+
+    pre_aggregations:
+      - name: weekly_signal_breakdown
+        type: rollup
+        dimensions:
+          - CUBE.market
+          - CUBE.sector
+          - CUBE.action_signal
+          - CUBE.risk_bucket
+          - CUBE.macro_regime
+          - CUBE.cadence
+        measures:
+          - CUBE.count
+          - CUBE.avg_total_score
+          - CUBE.avg_period_return_pct
+          - CUBE.above_sma200_count
+          - CUBE.rankable_count
+        time_dimension: CUBE.period_start
+        granularity: week
+        partition_granularity: month
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+      - name: ticker_history
+        type: rollup
+        dimensions:
+          - CUBE.ticker
+          - CUBE.market
+          - CUBE.name
+          - CUBE.sector
+          - CUBE.industry
+          - CUBE.action_signal
+          - CUBE.risk_bucket
+          - CUBE.score_tier
+          - CUBE.cadence
+          - CUBE.macro_regime
+        measures:
+          - CUBE.avg_total_score
+          - CUBE.avg_period_return_pct
+          - CUBE.avg_momentum_12_1
+        time_dimension: CUBE.period_start
+        granularity: week
+        partition_granularity: quarter
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+      - name: market_breadth_daily
+        type: rollup
+        dimensions:
+          - CUBE.market
+          - CUBE.cadence
+          - CUBE.macro_regime
+        measures:
+          - CUBE.count
+          - CUBE.strong_count
+          - CUBE.rising_count
+          - CUBE.weak_count
+          - CUBE.fading_count
+          - CUBE.above_sma200_count
+          - CUBE.high_risk_count
+          - CUBE.avg_total_score
+          - CUBE.avg_period_return_pct
+        time_dimension: CUBE.period_start
+        granularity: week
+        partition_granularity: quarter
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
+
+      - name: sector_scores_over_time
+        type: rollup
+        dimensions:
+          - CUBE.market
+          - CUBE.sector
+          - CUBE.cadence
+          - CUBE.macro_regime
+        measures:
+          - CUBE.count
+          - CUBE.avg_total_score
+          - CUBE.avg_momentum_12_1
+          - CUBE.strong_count
+          - CUBE.rising_count
+          - CUBE.weak_count
+          - CUBE.above_sma200_count
+          - CUBE.rankable_count
+        time_dimension: CUBE.period_start
+        granularity: week
+        partition_granularity: quarter
+        scheduled_refresh: true
+        refresh_key:
+          every: 1 hour
