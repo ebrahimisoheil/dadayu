@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: yahoo
+    database: dadayu
+    schema: dadayu
+    tables:
+      - name: prices_daily
+        description: Daily equity OHLCV bars ingested from yfinance.
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 5, period: day}
+        loaded_at_field: ingested_at
+
+      - name: index_prices_daily
+        description: Daily benchmark/index OHLCV bars ingested from yfinance.
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 5, period: day}
+        loaded_at_field: ingested_at
+
+      - name: crypto_prices_daily
+        description: Daily crypto OHLCV bars ingested from yfinance.
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 5, period: day}
+        loaded_at_field: ingested_at
+
+      - name: tickers
+        description: Equity metadata from yfinance .info.
+
+      - name: macro_prices_daily
+        description: Daily macro cross-asset OHLCV bars (ETFs, rate indices, futures) ingested from yfinance.
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 5, period: day}
+        loaded_at_field: ingested_at
+
