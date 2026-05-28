@@ -7,6 +7,7 @@ from dagster_pipeline.resources import PostgresResource
 from dagster_pipeline.assets.equity import equity_ohlcv, equity_ticker_info
 from dagster_pipeline.assets.crypto import crypto_ohlcv, crypto_info
 from dagster_pipeline.assets.indexes import index_ohlcv
+from dagster_pipeline.assets.macro import macro_ohlcv
 from dadayu.ingest.macro import load_symbols, load_universe
 
 
@@ -146,17 +147,10 @@ def test_macro_load_universe_has_required_columns():
 
 
 def test_macro_ohlcv_skips_empty_download():
-    from unittest.mock import patch
-    import pandas as pd
-    from dagster import materialize
-    from dagster_pipeline.assets.macro import macro_ohlcv
-    from dagster_pipeline.resources import PostgresResource
-
-    with patch("dagster_pipeline.assets.macro.load_symbols", return_value=["HYG"]), \
+    with patch("dadayu.db.get_pg_client") as mock_gc, \
+         patch("dagster_pipeline.assets.macro.load_symbols", return_value=["HYG"]), \
          patch("dagster_pipeline.assets.macro.get_watermark", return_value="2026-05-01"), \
          patch("dagster_pipeline.assets.macro.download_ohlcv", return_value=pd.DataFrame()):
-        result = materialize(
-            [macro_ohlcv],
-            resources={"postgres": PostgresResource()},
-        )
+        mock_gc.return_value = MagicMock()
+        result = materialize([macro_ohlcv], resources={"postgres": PostgresResource()})
     assert result.success
