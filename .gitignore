@@ -8,3 +8,4 @@ dagster_home/
 .gstack/
 
 compose.override.yml
+cube/.cubestore/
