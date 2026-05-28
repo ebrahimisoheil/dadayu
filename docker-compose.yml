@@ -1,27 +1,4 @@
 services:
-  dadayu_clickhouse:
-    image: clickhouse/clickhouse-server:24
-    container_name: dadayu_clickhouse
-    ports:
-      - "8123:8123"
-      - "9000:9000"
-    environment:
-      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-dadayu}
-      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-dadayu}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-changeme}
-    volumes:
-      - dadayu_ch_data:/var/lib/clickhouse
-      - ./db/clickhouse_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   dadayu_postgres:
     image: postgres:16-alpine
     container_name: dadayu_postgres
@@ -29,26 +6,16 @@ services:
       POSTGRES_USER: ${DAGSTER_PG_USER:-dagster}
       POSTGRES_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
       POSTGRES_DB: ${DAGSTER_PG_DB:-dagster}
+    ports:
+      - "${DADAYU_PG_PORT:-5432}:5432"
     volumes:
       - dadayu_pg_data:/var/lib/postgresql/data
+      - ./db/postgres_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dagster"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  dadayu_postgres_setup:
-    image: postgres:16-alpine
-    container_name: dadayu_postgres_setup
-    restart: "no"
-    depends_on:
-      dadayu_postgres:
-        condition: service_healthy
-    environment:
-      PGPASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
-    command: >
-      psql -h dadayu_postgres -U ${DAGSTER_PG_USER:-dagster} -d ${DAGSTER_PG_DB:-dagster}
-      -c "SELECT 'CREATE DATABASE metabase' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'metabase')\gexec"
 
   dadayu_dagster_code:
     build: .
@@ -58,7 +25,11 @@ services:
     env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
-      CLICKHOUSE_HOST: dadayu_clickhouse
+      DADAYU_PG_HOST: dadayu_postgres
+      DADAYU_PG_PORT: 5432
+      DADAYU_PG_DB: ${DADAYU_PG_DB:-dadayu}
+      DADAYU_PG_USER: ${DADAYU_PG_USER:-dadayu}
+      DADAYU_PG_PASSWORD: ${DADAYU_PG_PASSWORD:-dadayu}
       DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
       DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
       DAGSTER_PG_HOST: dadayu_postgres
@@ -75,8 +46,6 @@ services:
       retries: 10
       start_period: 15s
     depends_on:
-      dadayu_clickhouse:
-        condition: service_healthy
       dadayu_postgres:
         condition: service_healthy
 
@@ -90,7 +59,11 @@ services:
     env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
-      CLICKHOUSE_HOST: dadayu_clickhouse
+      DADAYU_PG_HOST: dadayu_postgres
+      DADAYU_PG_PORT: 5432
+      DADAYU_PG_DB: ${DADAYU_PG_DB:-dadayu}
+      DADAYU_PG_USER: ${DADAYU_PG_USER:-dadayu}
+      DADAYU_PG_PASSWORD: ${DADAYU_PG_PASSWORD:-dadayu}
       DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
       DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
       DAGSTER_PG_HOST: dadayu_postgres
@@ -111,7 +84,11 @@ services:
     env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
-      CLICKHOUSE_HOST: dadayu_clickhouse
+      DADAYU_PG_HOST: dadayu_postgres
+      DADAYU_PG_PORT: 5432
+      DADAYU_PG_DB: ${DADAYU_PG_DB:-dadayu}
+      DADAYU_PG_USER: ${DADAYU_PG_USER:-dadayu}
+      DADAYU_PG_PASSWORD: ${DADAYU_PG_PASSWORD:-dadayu}
       DAGSTER_PG_USER: ${DAGSTER_PG_USER:-dagster}
       DAGSTER_PG_PASSWORD: ${DAGSTER_PG_PASSWORD:-dagster}
       DAGSTER_PG_HOST: dadayu_postgres
@@ -124,19 +101,6 @@ services:
       dadayu_dagster_code:
         condition: service_healthy
 
-  dadayu_api:
-    build: .
-    image: dadayu:latest
-    container_name: dadayu_api
-    ports:
-      - "8000:8000"
-    env_file: .env
-    environment:
-      CLICKHOUSE_HOST: dadayu_clickhouse
-    depends_on:
-      dadayu_clickhouse:
-        condition: service_healthy
-
   dadayu_dbt:
     build:
       context: .
@@ -145,12 +109,39 @@ services:
     volumes:
       - ./warehouse:/usr/app/dbt
       - ~/.dbt:/root/.dbt:ro
+    environment:
+      DADAYU_PG_HOST: dadayu_postgres
+      DADAYU_PG_PORT: 5432
+      DADAYU_PG_DB: ${DADAYU_PG_DB:-dadayu}
+      DADAYU_PG_USER: ${DADAYU_PG_USER:-dadayu}
+      DADAYU_PG_PASSWORD: ${DADAYU_PG_PASSWORD:-dadayu}
     working_dir: /usr/app/dbt
     depends_on:
-      dadayu_clickhouse:
+      dadayu_postgres:
         condition: service_healthy
     profiles:
       - tools
+
+  dadayu_cube:
+    image: cubejs/cube:latest
+    container_name: dadayu_cube
+    ports:
+      - "4000:4000"
+    environment:
+      CUBEJS_DB_TYPE: postgres
+      CUBEJS_DB_HOST: dadayu_postgres
+      CUBEJS_DB_PORT: 5432
+      CUBEJS_DB_NAME: ${DADAYU_PG_DB:-dadayu}
+      CUBEJS_DB_USER: ${DADAYU_PG_USER:-dadayu}
+      CUBEJS_DB_PASS: ${DADAYU_PG_PASSWORD:-dadayu}
+      CUBEJS_DB_SCHEMA: dadayu
+      CUBEJS_API_SECRET: ${CUBE_API_SECRET:-dadayu_cube_secret_change_in_prod}
+      CUBEJS_DEV_MODE: "true"
+    volumes:
+      - ./cube:/cube/conf
+    depends_on:
+      dadayu_postgres:
+        condition: service_healthy
 
   dadayu_metabase:
     image: metabase/metabase:v0.61.2
@@ -168,10 +159,8 @@ services:
     volumes:
       - dadayu_metabase_data:/metabase-data
     depends_on:
-      dadayu_clickhouse:
+      dadayu_postgres:
         condition: service_healthy
-      dadayu_postgres_setup:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 15s
@@ -180,7 +169,6 @@ services:
       start_period: 60s
 
 volumes:
-  dadayu_ch_data:
   dadayu_pg_data:
   dadayu_dagster_home:
   dadayu_metabase_data:

@@ -1,0 +1,69 @@
+cubes:
+  - name: MacroRegime
+    sql_table: dadayu.mart_macro_regime_daily
+    title: Macro Regime
+    description: >
+      Daily 6-dimension composite macro regime score (0-100) and 5-state label.
+      Covers credit, growth, dollar, sector, rates, inflation dimensions.
+
+    dimensions:
+      - name: ts
+        sql: ts
+        type: time
+        title: Date
+        primary_key: true
+
+      - name: macro_regime
+        sql: macro_regime
+        type: string
+        title: Macro Regime (5-state)
+
+      - name: market_regime
+        sql: market_regime
+        type: string
+        title: Market Regime (3-state)
+
+    measures:
+      - name: composite_macro_score
+        sql: composite_macro_score
+        type: avg
+        title: Composite Score
+
+      - name: credit_score
+        sql: credit_score
+        type: avg
+        title: Credit Score
+
+      - name: growth_score
+        sql: growth_score
+        type: avg
+        title: Growth Score
+
+      - name: dollar_score
+        sql: dollar_score
+        type: avg
+        title: Dollar Score
+
+      - name: rates_score
+        sql: rates_score
+        type: avg
+        title: Rates Score
+
+      - name: inflation_score
+        sql: inflation_score
+        type: avg
+        title: Inflation Score
+
+      - name: sector_score
+        sql: sector_score
+        type: avg
+        title: Sector Score
+
+      - name: avg_30d_score
+        sql: composite_macro_score_30d_avg
+        type: avg
+        title: 30-Day Avg Score
+
+      - name: count
+        type: count
+        public: false

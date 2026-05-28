@@ -1,0 +1,157 @@
+cubes:
+  - name: StockIntel
+    sql_table: dadayu.mart_stock_intel_weekly
+    title: Stock Intelligence (Weekly)
+    description: >
+      One row per stock per week. Scores, signals, risk, sector context,
+      macro regime, and week-over-week deltas. Primary table for dashboards.
+
+    dimensions:
+      - name: id
+        sql: "ticker || '|' || market || '|' || period_start::text"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: ticker
+        sql: ticker
+        type: string
+        title: Ticker
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: name
+        sql: name
+        type: string
+        title: Company Name
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: industry
+        sql: industry
+        type: string
+        title: Industry
+
+      - name: cadence
+        sql: cadence
+        type: string
+        title: Cadence
+
+      - name: period_start
+        sql: period_start
+        type: time
+        title: Period Start
+
+      - name: score_date
+        sql: score_date
+        type: time
+        title: Score Date
+
+      - name: action_signal
+        sql: action_signal
+        type: string
+        title: Action Signal
+
+      - name: risk_bucket
+        sql: risk_bucket
+        type: string
+        title: Risk Bucket
+
+      - name: macro_regime
+        sql: macro_regime
+        type: string
+        title: Macro Regime
+
+      - name: market_regime
+        sql: market_regime
+        type: string
+        title: Market Regime (3-state)
+
+      - name: is_rankable
+        sql: is_rankable
+        type: boolean
+        title: Is Rankable
+
+      - name: cmo_monthly_above_25
+        sql: cmo_monthly_above_25
+        type: boolean
+        title: CMO Monthly > 25
+
+    measures:
+      - name: count
+        type: count
+        title: Stock Count
+
+      - name: avg_total_score
+        sql: total_score
+        type: avg
+        title: Avg Total Score
+
+      - name: avg_momentum_score
+        sql: momentum_score
+        type: avg
+        title: Avg Momentum Score
+
+      - name: avg_composite_macro_score
+        sql: composite_macro_score
+        type: avg
+        title: Avg Macro Score
+
+      - name: avg_period_return_pct
+        sql: period_return_pct * 100
+        type: avg
+        title: Avg Period Return %
+
+      - name: avg_rank
+        sql: overall_rank
+        type: avg
+        title: Avg Rank
+
+      - name: strong_count
+        sql: "CASE WHEN action_signal = 'strong' THEN 1 END"
+        type: count
+        title: Strong Signals
+
+      - name: rising_count
+        sql: "CASE WHEN action_signal = 'rising' THEN 1 END"
+        type: count
+        title: Rising Signals
+
+      - name: weak_count
+        sql: "CASE WHEN action_signal = 'weak' THEN 1 END"
+        type: count
+        title: Weak Signals
+
+      - name: high_risk_count
+        sql: "CASE WHEN risk_bucket = 'high' THEN 1 END"
+        type: count
+        title: High Risk Count
+
+      - name: above_200sma_count
+        sql: "CASE WHEN close > sma_200 THEN 1 END"
+        type: count
+        title: Above 200 SMA Count
+
+  - name: StockIntelMonthly
+    sql_table: dadayu.mart_stock_intel_monthly
+    title: Stock Intelligence (Monthly)
+    description: Same as StockIntel but at monthly cadence.
+    extends: StockIntel
+
+  - name: StockIntelQuarterly
+    sql_table: dadayu.mart_stock_intel_quarterly
+    title: Stock Intelligence (Quarterly)
+    description: Same as StockIntel but at quarterly cadence.
+    extends: StockIntel
+
+  - name: StockIntel6m
+    sql_table: dadayu.mart_stock_intel_6m
+    title: Stock Intelligence (6-Month)
+    description: Same as StockIntel but at 6-month cadence.
+    extends: StockIntel
