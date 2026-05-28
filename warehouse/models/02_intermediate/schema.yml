@@ -1,0 +1,142 @@
+version: 2
+
+models:
+  - name: int_market_assets_daily
+    description: Unified daily equity and crypto asset prices.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, ts]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+
+  - name: int_market_indexes_daily
+    description: Daily index benchmark prices and returns.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [index_id, ts]
+    columns:
+      - name: index_id
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+
+  - name: int_market_asset_indicators_daily
+    description: Daily indicators and readiness flags for rankable assets.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, ts]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+
+  - name: int_market_data_quality_daily
+    description: Daily market data quality and tradability flags preserving raw rows for auditability.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, ts]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+      - name: is_valid_market_data
+        data_tests: [not_null]
+      - name: is_backtest_tradable
+        data_tests: [not_null]
+
+  - name: int_market_backtest_prices_daily
+    description: Cleaned daily asset prices and liquidity flags used by backtest execution and validation.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, ts]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+      - name: is_backtest_tradable
+        data_tests: [not_null]
+
+  - name: int_market_forward_prices_daily
+    description: Pre-computed 5/20/60-day forward close prices for backtest signal return validation. Materialized to avoid inline window functions in large mart queries.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, signal_date]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: signal_date
+        data_tests: [not_null]
+
+  - name: int_backtest_asset_scores_daily
+    description: Rankable portfolio score rows filtered to the cleaned backtest tradable universe.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market, score_date]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: score_date
+        data_tests: [not_null]
+      - name: risk_bucket
+        data_tests: [not_null]
+
+  - name: int_themes_constituents
+    description: Active theme membership with normalized weights.
+    columns:
+      - name: theme_id
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+  - name: int_market_regime_daily
+    description: Daily S&P 500 based market regime.
+    columns:
+      - name: ts
+        data_tests: [not_null]
+
+  - name: int_macro_assets_daily
+    description: Daily per-ticker indicators for the macro cross-asset universe (26 instruments).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, ts]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+
+  - name: int_macro_regime_daily
+    description: Daily 6-dimension composite macro regime score (0-100) and 5-state label.
+    columns:
+      - name: ts
+        data_tests: [not_null]
+      - name: composite_macro_score
+        data_tests: [not_null]
+      - name: macro_regime
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [risk_on, constructive, neutral, defensive, risk_off]
+      - name: market_regime
+        data_tests:
+          - accepted_values:
+              values: [risk_on, neutral, risk_off]
