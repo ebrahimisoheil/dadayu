@@ -438,6 +438,7 @@ views:
           - macro_regime
           - composite_macro_score
           - atr_pct
+          - is_rankable
           - count
           - avg_total_score
           - avg_momentum_12_1
@@ -468,7 +469,13 @@ views:
           - annualized_return_pct
           - max_drawdown_pct
           - annualized_cost_drag_bps
-          - elapsed_days
+          - win_rate_pct
+          - calmar_ratio
+          - alpha_pct
+          - train_sharpe_ratio
+          - validation_sharpe_ratio
+          - test_sharpe_ratio
+          - top_contributor_ticker
           - count
           - avg_sharpe
           - best_sharpe

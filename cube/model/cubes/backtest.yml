@@ -1,7 +1,7 @@
 cubes:
   - name: BacktestPerformance
     title: Backtest Strategy Performance
-    sql_table: dadayu.mart_backtest_performance
+    sql_table: dadayu.mart_backtest_production_candidates
 
     dimensions:
       - name: backtest_id
@@ -35,20 +35,45 @@ cubes:
         type: string
         title: Exposure Policy
 
-      - name: start_date
-        sql: start_date
+      - name: computed_at
+        sql: computed_at
         type: time
-        title: Backtest Start
+        title: Computed At
 
-      - name: end_date
-        sql: end_date
-        type: time
-        title: Backtest End
-
-      - name: elapsed_days
-        sql: elapsed_days
+      - name: win_rate_pct
+        sql: win_rate_pct
         type: number
-        title: Elapsed Days
+        title: Win Rate %
+
+      - name: calmar_ratio
+        sql: calmar_ratio
+        type: number
+        title: Calmar Ratio
+
+      - name: alpha_pct
+        sql: alpha_pct
+        type: number
+        title: Alpha %
+
+      - name: top_contributor_ticker
+        sql: top_contributor_ticker
+        type: string
+        title: Top Contributor Ticker
+
+      - name: train_sharpe_ratio
+        sql: train_sharpe_ratio
+        type: number
+        title: Train Sharpe
+
+      - name: validation_sharpe_ratio
+        sql: validation_sharpe_ratio
+        type: number
+        title: Validation Sharpe
+
+      - name: test_sharpe_ratio
+        sql: test_sharpe_ratio
+        type: number
+        title: Test Sharpe
 
       - name: sharpe_ratio
         sql: sharpe_ratio
@@ -69,11 +94,6 @@ cubes:
         sql: annualized_cost_drag_bps
         type: number
         title: Annual Cost Drag (bps)
-
-      - name: final_value
-        sql: final_value
-        type: number
-        title: Final Portfolio Value
 
       - name: is_production_candidate
         sql: is_production_candidate
@@ -175,13 +195,6 @@ cubes:
       - name: low_cost
         sql: "{CUBE}.annualized_cost_drag_bps <= 300"
         title: Low Cost Strategies
-
-    pre_aggregations:
-      - name: strategy_comparison
-        type: original_sql
-        scheduled_refresh: true
-        refresh_key:
-          every: 24 hours
 
   - name: BacktestTrades
     title: Backtest Trades
