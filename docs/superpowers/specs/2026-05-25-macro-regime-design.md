@@ -1,6 +1,7 @@
 # Macro Regime & Cross-Asset Analytics — Design Spec
 
 **Date:** 2026-05-25
+**Revised:** 2026-05-28 — updated for Postgres (migrated from ClickHouse)
 **Status:** Approved for implementation
 
 ---
@@ -52,7 +53,7 @@
 ```
 macro_universe.csv (seed)
     ↓
-macro_prices_daily (ClickHouse table)
+macro_prices_daily (Postgres table)
     ↓ macro_ohlcv (Dagster asset, weekdays 22:15 UTC)
 stg_yahoo__macro_ohlcv_daily (staging)
     ↓
@@ -75,11 +76,24 @@ Columns: `macro_id, ticker, market, name, instrument_type, regime_dimension`
 
 ---
 
-## 2. ClickHouse Table — `macro_prices_daily`
+## 2. Postgres Table — `macro_prices_daily`
 
-Identical schema to `index_prices_daily`. Add `CREATE TABLE IF NOT EXISTS` block to `db/clickhouse_init.sql`.
+Identical schema to `index_prices_daily`. Add `CREATE TABLE IF NOT EXISTS` block to `db/postgres_init.sql`.
 
-Schema: `ticker, market, ts, open, high, low, close, volume` with MergeTree engine, `ORDER BY (ticker, market, ts)`, `PARTITION BY toYYYYMM(ts)`.
+```sql
+CREATE TABLE IF NOT EXISTS macro_prices_daily (
+    ticker text NOT NULL,
+    market text NOT NULL DEFAULT 'macro',
+    date date NOT NULL,
+    open double precision,
+    high double precision,
+    low double precision,
+    close double precision,
+    volume bigint NOT NULL DEFAULT 0,
+    ingested_at timestamp NOT NULL DEFAULT current_timestamp,
+    PRIMARY KEY (ticker, market, date)
+);
+```
 
 ---
 
@@ -138,7 +152,7 @@ Computed per `(ticker, ts)`:
 - `above_sma_20`, `above_sma_50`, `above_sma_200` — boolean flags
 - `pct_rank_return_20d` — percentile rank of 20d return in trailing 252-day window (0–1), used for normalized scoring
 
-`materialized='table'`, partitioned by month.
+`materialized='table'`
 
 ---
 
@@ -304,7 +318,7 @@ NEW  warehouse/models/02_intermediate/market/int_macro_regime_daily.sql
 NEW  warehouse/models/03_marts/macro/mart_macro_regime_daily.sql
 NEW  warehouse/models/03_marts/macro/schema.yml
 MOD  warehouse/models/02_intermediate/market/int_market_regime_daily.sql  (→ passthrough ref)
-MOD  db/clickhouse_init.sql  (add macro_prices_daily table)
+MOD  db/postgres_init.sql  (add macro_prices_daily table)
 MOD  dagster_pipeline/assets/__init__.py  (export macro_ohlcv)
 MOD  dagster_pipeline/schedules.py  (add macro_job, macro_schedule)
 MOD  dagster_pipeline/definitions.py  (register macro asset + schedule)
