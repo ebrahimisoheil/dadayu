@@ -1,4 +1,269 @@
 views:
+  # ─── Cadence Views (subscription tiers) ───────────────────────────────────
+  # One view per cadence. Each subscription tier queries its own view.
+  # All share identical members — only the underlying cadence filter differs.
+  # Usage: filter StockIntelligence by cadence segment, then by latest period.
+
+  - name: WeeklyStocks
+    title: Weekly Stock Intelligence
+    description: >
+      All weekly-cadence stock intelligence rows. One row per (ticker, market, week).
+      Used by: weekly subscription tier, weekly digest email, weekly dashboard.
+    cubes:
+      - join_path: StockIntelligence
+        prefix: false
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - cadence
+          - period_start
+          - period_end
+          - score_date
+          - action_signal
+          - risk_bucket
+          - macro_regime
+          - market_regime
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - return_direction
+          - sector_rank_label
+          - total_score
+          - momentum_score
+          - trend_score
+          - rsi_score
+          - macd_score
+          - cmo_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_rank_in_market
+          - sector_rank_in_market
+          - sector_avg_score
+          - atr_pct
+          - volatility_pct_in_sector
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_50
+          - sma_200
+          - composite_macro_score
+          - industry_momentum_pct_rank
+          - benchmark_return_20d_pct
+          - is_rankable
+          - quality_reasons
+          - count
+          - avg_total_score
+          - avg_period_return_pct
+          - avg_momentum_12_1
+          - strong_count
+          - rising_count
+          - fading_count
+          - weak_count
+          - neutral_count
+          - high_risk_count
+          - low_risk_count
+          - above_sma200_count
+          - rankable_count
+
+  - name: MonthlyStocks
+    title: Monthly Stock Intelligence
+    description: >
+      All monthly-cadence stock intelligence rows. One row per (ticker, market, month).
+      Used by: monthly subscription tier, monthly report page.
+    cubes:
+      - join_path: StockIntelligence
+        prefix: false
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - cadence
+          - period_start
+          - period_end
+          - score_date
+          - action_signal
+          - risk_bucket
+          - macro_regime
+          - market_regime
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - return_direction
+          - sector_rank_label
+          - total_score
+          - momentum_score
+          - trend_score
+          - rsi_score
+          - macd_score
+          - cmo_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_rank_in_market
+          - sector_rank_in_market
+          - sector_avg_score
+          - atr_pct
+          - volatility_pct_in_sector
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_50
+          - sma_200
+          - composite_macro_score
+          - industry_momentum_pct_rank
+          - benchmark_return_20d_pct
+          - is_rankable
+          - quality_reasons
+          - count
+          - avg_total_score
+          - avg_period_return_pct
+          - avg_momentum_12_1
+          - strong_count
+          - rising_count
+          - fading_count
+          - weak_count
+          - neutral_count
+          - high_risk_count
+          - low_risk_count
+          - above_sma200_count
+          - rankable_count
+
+  - name: QuarterlyStocks
+    title: Quarterly Stock Intelligence
+    description: >
+      All quarterly-cadence stock intelligence rows. One row per (ticker, market, quarter).
+      Used by: quarterly subscription tier, quarterly review page.
+    cubes:
+      - join_path: StockIntelligence
+        prefix: false
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - cadence
+          - period_start
+          - period_end
+          - score_date
+          - action_signal
+          - risk_bucket
+          - macro_regime
+          - market_regime
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - return_direction
+          - sector_rank_label
+          - total_score
+          - momentum_score
+          - trend_score
+          - rsi_score
+          - macd_score
+          - cmo_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_rank_in_market
+          - sector_rank_in_market
+          - sector_avg_score
+          - atr_pct
+          - volatility_pct_in_sector
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_50
+          - sma_200
+          - composite_macro_score
+          - industry_momentum_pct_rank
+          - benchmark_return_20d_pct
+          - is_rankable
+          - quality_reasons
+          - count
+          - avg_total_score
+          - avg_period_return_pct
+          - avg_momentum_12_1
+          - strong_count
+          - rising_count
+          - fading_count
+          - weak_count
+          - neutral_count
+          - high_risk_count
+          - low_risk_count
+          - above_sma200_count
+          - rankable_count
+
+  - name: SemiAnnualStocks
+    title: 6-Month Stock Intelligence
+    description: >
+      All 6-month-cadence stock intelligence rows. One row per (ticker, market, half-year).
+      Used by: 6-month subscription tier, semi-annual review page.
+    cubes:
+      - join_path: StockIntelligence
+        prefix: false
+        includes:
+          - ticker
+          - market
+          - name
+          - sector
+          - industry
+          - cadence
+          - period_start
+          - period_end
+          - score_date
+          - action_signal
+          - risk_bucket
+          - macro_regime
+          - market_regime
+          - score_tier
+          - rank_movement
+          - momentum_label
+          - return_direction
+          - sector_rank_label
+          - total_score
+          - momentum_score
+          - trend_score
+          - rsi_score
+          - macd_score
+          - cmo_score
+          - score_delta
+          - rank_delta
+          - overall_rank
+          - momentum_rank_in_market
+          - sector_rank_in_market
+          - sector_avg_score
+          - atr_pct
+          - volatility_pct_in_sector
+          - momentum_12_1_pct
+          - period_return_pct
+          - close
+          - sma_50
+          - sma_200
+          - composite_macro_score
+          - industry_momentum_pct_rank
+          - benchmark_return_20d_pct
+          - is_rankable
+          - quality_reasons
+          - count
+          - avg_total_score
+          - avg_period_return_pct
+          - avg_momentum_12_1
+          - strong_count
+          - rising_count
+          - fading_count
+          - weak_count
+          - neutral_count
+          - high_risk_count
+          - low_risk_count
+          - above_sma200_count
+          - rankable_count
+
   # ─── Current Week Snapshot ─────────────────────────────────────────────────
   # Query this for "What's happening right now" dashboard pages.
   # Filter: period_start = latest week. No JOIN needed.
