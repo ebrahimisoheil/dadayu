@@ -17,37 +17,68 @@ clean-targets: ["target", "dbt_packages"]
 
 models:
   dadayu_warehouse:
-    staging:
+    01_staging:
       +materialized: view
       coingecko:
         +materialized: view
-    intermediate:
+    02_intermediate:
       +materialized: view
-    marts:
-      reference:
-        +materialized: view
-      markets:
-        +materialized: view
-      indicators:
-        +materialized: view
+    03_marts:
+      +materialized: table
 
 seeds:
   dadayu_warehouse:
-    trading_calendar:
-      +column_types:
-        is_trading_day: UInt8
     gics_hierarchy:
       +column_types:
-        sector_id: String
-        industry_group_id: String
-        industry_id: String
-        sub_industry_id: String
+        sector_id: text
+        industry_group_id: text
+        industry_id: text
+        sub_industry_id: text
     crypto_universe:
       +column_types:
-        symbol: String
-        coingecko_id: String
-        name: String
-        category: String
+        symbol: text
+        coingecko_id: text
+        name: text
+        category: text
+    equity_universe_extra:
+      +column_types:
+        ticker: text
+        market: text
+        name: text
+        sector: text
+        industry: text
+    index_universe:
+      +column_types:
+        index_id: text
+        ticker: text
+        market: text
+        name: text
+        region: text
+        benchmark_type: text
+    stock_themes:
+      +column_types:
+        theme_id: text
+        theme_name: text
+        description: text
+        is_active: integer
+        launch_status: text
+    stock_theme_constituents:
+      +column_types:
+        theme_id: text
+        ticker: text
+        market: text
+        is_primary_theme: integer
+        theme_weight: double precision
+        conviction: text
+        rationale: text
+    macro_universe:
+      +column_types:
+        macro_id: text
+        ticker: text
+        market: text
+        name: text
+        instrument_type: text
+        regime_dimension: text
 
 snapshots:
   dadayu_warehouse:

@@ -1,0 +1,27 @@
+macro_id,ticker,market,name,instrument_type,regime_dimension
+HYG,HYG,macro,iShares HY Corporate Bond,etf,credit
+LQD,LQD,macro,iShares IG Corporate Bond,etf,credit
+TLT,TLT,macro,iShares 20+ Year Treasury,etf,rates
+IEF,IEF,macro,iShares 7-10 Year Treasury,etf,rates
+SHY,SHY,macro,iShares 1-3 Year Treasury,etf,rates
+TIP,TIP,macro,iShares TIPS Bond,etf,inflation
+TNX,^TNX,macro,10-Year Treasury Yield,rate_index,rates
+GLD,GLD,macro,SPDR Gold Shares,etf,inflation
+SLV,SLV,macro,iShares Silver Trust,etf,inflation
+USO,USO,macro,United States Oil Fund,etf,inflation
+GCF,GC=F,macro,Gold Futures,future,inflation
+SIF,SI=F,macro,Silver Futures,future,inflation
+CLF,CL=F,macro,Crude Oil Futures,future,inflation
+CPER,CPER,macro,United States Copper Index,etf,growth
+DBB,DBB,macro,Invesco DB Base Metals,etf,growth
+HGF,HG=F,macro,Copper Futures,future,growth
+EFA,EFA,macro,iShares MSCI EAFE,etf,growth
+EEM,EEM,macro,iShares MSCI Emerging Markets,etf,growth
+UUP,UUP,macro,Invesco DB US Dollar Index,etf,dollar
+VNQ,VNQ,macro,Vanguard Real Estate ETF,etf,rates
+XLE,XLE,macro,Energy Select Sector SPDR,etf,sector
+XLF,XLF,macro,Financial Select Sector SPDR,etf,sector
+XLK,XLK,macro,Technology Select Sector SPDR,etf,sector
+XLV,XLV,macro,Health Care Select Sector SPDR,etf,sector
+XLI,XLI,macro,Industrial Select Sector SPDR,etf,sector
+XLU,XLU,macro,Utilities Select Sector SPDR,etf,sector
