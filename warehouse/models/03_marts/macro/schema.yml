@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: mart_macro_regime_daily
+    description: >
+      Metabase-facing macro regime mart. One row per trading day.
+      composite_macro_score (0–100) is the weighted composite of 6 dimension scores.
+      macro_regime is the 5-state label (risk_on / constructive / neutral / defensive / risk_off).
+      Hysteresis entry/exit thresholds stored as constant columns for strategy consumers.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ts]
+    columns:
+      - name: ts
+        data_tests: [not_null]
+      - name: composite_macro_score
+        data_tests: [not_null]
+      - name: credit_score
+        data_tests: [not_null]
+      - name: rates_score
+        data_tests: [not_null]
+      - name: inflation_score
+        data_tests: [not_null]
+      - name: dollar_score
+        data_tests: [not_null]
+      - name: growth_score
+        data_tests: [not_null]
+      - name: sector_score
+        data_tests: [not_null]
+      - name: macro_regime
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [risk_on, constructive, neutral, defensive, risk_off]
