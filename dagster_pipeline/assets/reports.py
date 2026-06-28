@@ -8,9 +8,14 @@ from pathlib import Path
 from dagster import AssetKey, MaterializeResult, MetadataValue, asset
 
 
+_PROJECT_ROOT = str(Path(__file__).parent.parent.parent)
+
+
 def _run_report() -> Path:
     old_argv = sys.argv[:]
     sys.argv = [sys.argv[0]]
+    if _PROJECT_ROOT not in sys.path:
+        sys.path.insert(0, _PROJECT_ROOT)
     try:
         from tools.audit.generate_data_quality_report import main
 

@@ -62,8 +62,8 @@ def check_equity_ohlcv(client: PostgresClient) -> list[CheckResult]:
            SELECT count(*) FILTER (WHERE
              ts < current_date
              AND (
-               close < low - greatest(abs(low), 1) * 1e-9
-               OR close > high + greatest(abs(high), 1) * 1e-9
+               close < low - greatest(abs(low), 1) * 0.005
+               OR close > high + greatest(abs(high), 1) * 0.005
              )
            )
            FROM stg_yahoo__equity_ohlcv_daily

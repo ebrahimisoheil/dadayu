@@ -13,16 +13,11 @@ DBT_MANIFEST = DBT_PROJECT_DIR / "target" / "manifest.json"
 # We trace each model's depends_on.nodes → source → ingestion key, so multiple
 # sources can point to the same ingestion asset without key-uniqueness collisions.
 _SOURCE_UPSTREAM: dict[str, AssetKey] = {
-    "prices_hourly":        AssetKey("equity_ohlcv"),
-    "prices_4h":            AssetKey("equity_ohlcv"),
-    "prices_daily":         AssetKey("equity_ohlcv"),
-    "tickers":              AssetKey("equity_ticker_info"),
-    "crypto_prices_hourly": AssetKey("crypto_ohlcv"),
-    "crypto_prices_4h":     AssetKey("crypto_ohlcv"),
-    "crypto_prices_daily":  AssetKey("crypto_ohlcv"),
-    "crypto_metadata":      AssetKey("crypto_info"),
-    "polymarket_markets":   AssetKey("polymarket_markets"),
-    "polymarket_prices":    AssetKey("polymarket_prices"),
+    "prices_daily":              AssetKey("equity_ohlcv"),
+    "index_prices_daily":        AssetKey("index_ohlcv"),
+    "tickers":                   AssetKey("equity_ticker_info"),
+    "macro_prices_daily":        AssetKey("macro_ohlcv"),
+    "index_membership_observed": AssetKey("equity_index_membership"),
 }
 
 

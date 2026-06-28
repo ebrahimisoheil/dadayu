@@ -13,7 +13,7 @@ from dagster_pipeline.assets.dbt import (
     dbt_staging_assets,
 )
 from dagster_pipeline.assets.dbt._common import DBT_PROJECT_DIR
-from dagster_pipeline.assets.equity import equity_ohlcv, equity_ticker_info
+from dagster_pipeline.assets.equity import equity_index_membership, equity_ohlcv, equity_ticker_info
 from dagster_pipeline.assets.indexes import index_ohlcv
 from dagster_pipeline.assets.macro import macro_ohlcv
 from dagster_pipeline.assets.product import portfolio_ranker_top_20_log
@@ -35,6 +35,7 @@ defs = Definitions(
     assets=[
         equity_ohlcv,
         equity_ticker_info,
+        equity_index_membership,
         index_ohlcv,
         macro_ohlcv,
         dbt_seed_assets,

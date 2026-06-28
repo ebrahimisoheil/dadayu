@@ -1,0 +1,252 @@
+version: 2
+
+models:
+  - name: mart_backtest_strategy_variants
+    description: Configured strategy family, rebalance frequency, and portfolio-size variants.
+    columns:
+      - name: backtest_id
+        data_tests:
+          - not_null
+          - unique
+      - name: strategy_family
+        data_tests: [not_null]
+      - name: universe_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['equity']
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+      - name: rebalance_frequency
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['daily', 'weekly', 'monthly', 'quarterly', '6m']
+      - name: portfolio_size
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [10, 20, 40, 80]
+
+  - name: mart_backtest_signals_daily
+    description: Historical daily strategy signals with forward-return validation windows.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, signal_date, ticker, market]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: strategy_family
+        data_tests: [not_null]
+      - name: rebalance_frequency
+        data_tests: [not_null]
+      - name: portfolio_size
+        data_tests: [not_null]
+      - name: universe_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['equity']
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+      - name: signal_date
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: signal_rank
+        data_tests: [not_null]
+      - name: risk_bucket
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['low', 'medium', 'high']
+
+  - name: mart_backtest_trades
+    description: Simulated equal-weight strategy trades by rebalance variant.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, rebalance_date, ticker, market]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: rebalance_date
+        data_tests: [not_null]
+      - name: entry_date
+        data_tests: [not_null]
+      - name: exit_date
+        data_tests: [not_null]
+      - name: entry_price
+        data_tests: [not_null]
+      - name: exit_price
+        data_tests: [not_null]
+      - name: gross_return_pct
+        data_tests: [not_null]
+      - name: net_return_pct
+        data_tests: [not_null]
+      - name: total_cost_pct
+        data_tests: [not_null]
+      - name: universe_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['equity']
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+
+  - name: mart_backtest_portfolio_equity_daily
+    description: Daily portfolio equity curves and drawdowns for each backtest variant.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, equity_date]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: equity_date
+        data_tests: [not_null]
+      - name: portfolio_value
+        data_tests: [not_null]
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+
+  - name: mart_backtest_performance
+    description: Strategy performance summary compared with the S&P 500 index benchmark.
+    columns:
+      - name: backtest_id
+        data_tests:
+          - not_null
+          - unique
+      - name: annualized_return_pct
+        data_tests: [not_null]
+      - name: benchmark_annualized_return_pct
+        data_tests: [not_null]
+      - name: annualized_cost_drag_bps
+        data_tests: [not_null]
+      - name: universe_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['equity']
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+
+  - name: mart_backtest_performance_by_period
+    description: Monthly and yearly net performance diagnostics for each backtest variant.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, period_type, period_start]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: period_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['month', 'year']
+      - name: period_start
+        data_tests: [not_null]
+
+  - name: mart_backtest_performance_by_segment
+    description: Trade-level net performance diagnostics by asset, risk and market-regime segment.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, segment_type, segment_value]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: segment_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['asset_type', 'market', 'risk_bucket', 'market_regime', 'universe_scope', 'exposure_policy']
+      - name: segment_value
+        data_tests: [not_null]
+
+  - name: mart_backtest_walk_forward_performance
+    description: Train, validation, and test window diagnostics for each strategy variant with available equity history.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, window_name]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: window_name
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['train', 'validation', 'test', 'stress']
+      - name: window_start_date
+        data_tests: [not_null]
+      - name: window_end_date
+        data_tests: [not_null]
+      - name: universe_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['equity']
+      - name: exposure_policy
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['full']
+
+  - name: mart_backtest_contribution_by_ticker
+    description: Strategy contribution and concentration diagnostics by ticker.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [backtest_id, ticker, market]
+    columns:
+      - name: backtest_id
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: weighted_net_contribution_pct
+        data_tests: [not_null]
+
+  - name: mart_backtest_concentration_summary
+    description: Top contributor concentration summary per backtest variant.
+    columns:
+      - name: backtest_id
+        data_tests:
+          - not_null
+          - unique
+      - name: top1_abs_contribution_share_pct
+        data_tests: [not_null]
+      - name: top5_abs_contribution_share_pct
+        data_tests: [not_null]
+
+  - name: mart_backtest_production_candidates
+    description: Production readiness gate for strategy variants using performance, walk-forward, consistency, and concentration checks.
+    columns:
+      - name: backtest_id
+        data_tests:
+          - not_null
+          - unique
+      - name: is_production_candidate
+        data_tests: [not_null]
+      - name: rejection_reasons
+        data_tests: [not_null]
+      - name: stress_sharpe_ratio
+        data_tests:
+          - not_null:
+              severity: warn
+      - name: annualized_cost_drag_bps
+        data_tests: [not_null]
