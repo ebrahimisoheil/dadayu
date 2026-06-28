@@ -1,0 +1,12 @@
+version: 2
+
+snapshots:
+  - name: snap_index_membership
+    description: SCD Type 2 history of live index membership; valid_to closes when a ticker leaves an index.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: index_name
+        data_tests: [not_null]
