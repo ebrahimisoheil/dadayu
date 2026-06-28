@@ -61,9 +61,8 @@ def test_run_all_checks_returns_flat_list():
 
 
 def test_universe_membership_fails_below_floor():
-    # 5 queries: DE _check, DE again, US _check, US again, overlap _check
-    # 10 DE members (< 120 floor → FAIL), 500 US (>= 450 → PASS), 0 overlaps
-    client = _mock_client(10, 10, 500, 500, 0)
+    # 3 queries: DE count, US count, overlap count
+    client = _mock_client(10, 500, 0)
     results = check_universe_membership(client)
     de = next(r for r in results if r.name == "Active DE members")
     us = next(r for r in results if r.name == "Active US members")
@@ -74,15 +73,13 @@ def test_universe_membership_fails_below_floor():
 
 
 def test_universe_membership_passes_above_floor():
-    # 150 DE (>= 120), 600 US (>= 450), 0 overlaps → all PASS
-    client = _mock_client(150, 150, 600, 600, 0)
+    client = _mock_client(150, 600, 0)
     results = check_universe_membership(client)
     assert all(r.status == "PASS" for r in results)
 
 
 def test_universe_membership_fails_on_overlap():
-    # 150 DE, 600 US, 3 overlapping spans → overlap FAIL
-    client = _mock_client(150, 150, 600, 600, 3)
+    client = _mock_client(150, 600, 3)
     results = check_universe_membership(client)
     overlap = next(r for r in results if r.name == "Overlapping spans")
     assert overlap.status == "FAIL"

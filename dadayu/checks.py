@@ -187,20 +187,14 @@ def check_product_outputs(client: PostgresClient) -> list[CheckResult]:
 
 def check_universe_membership(client: PostgresClient) -> list[CheckResult]:
     results: list[CheckResult] = []
-    _check(results, "universe", "Active DE members", client,
-           "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'germany' AND valid_to IS NULL",
-           detail="floor 120")
-    de = client.query(
-        "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'germany' AND valid_to IS NULL"
-    ).result_rows[0][0]
+    de = _check(results, "universe", "Active DE members", client,
+               "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'germany' AND valid_to IS NULL",
+               detail="floor 120")
     if de < 120:
         results[-1].status = "FAIL"
-    _check(results, "universe", "Active US members", client,
-           "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'us' AND valid_to IS NULL",
-           detail="floor 450")
-    us = client.query(
-        "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'us' AND valid_to IS NULL"
-    ).result_rows[0][0]
+    us = _check(results, "universe", "Active US members", client,
+               "SELECT count(*) FROM int_universe_membership_daily WHERE market = 'us' AND valid_to IS NULL",
+               detail="floor 450")
     if us < 450:
         results[-1].status = "FAIL"
     _check(results, "universe", "Overlapping spans", client,
