@@ -5,6 +5,7 @@ from dadayu.checks import (
     _check,
     check_equity_ohlcv,
     check_mart_sanity,
+    check_universe_membership,
     run_all_checks,
 )
 
@@ -40,20 +41,48 @@ def test_check_result_warn_if_nonzero():
 
 
 def test_check_equity_ohlcv_returns_list():
-    # check_equity_ohlcv makes 11 SQL calls
-    values = [1000, 50, 2, 0, 0, 0, 0, 0, 10, 0, 0]
+    # check_equity_ohlcv makes 8 SQL calls
+    values = [1000, 50, 0, 0, 0, 0, 0, 1800]
     client = _mock_client(*values)
     results = check_equity_ohlcv(client)
     assert isinstance(results, list)
     assert all(isinstance(r, CheckResult) for r in results)
-    assert len(results) == 11
+    assert len(results) == 8
 
 
 def test_run_all_checks_returns_flat_list():
-    # Provide enough mock values for all queries across all 5 check functions
-    values = [100] * 60
+    # Provide enough mock values for all queries across all check functions
+    values = [100] * 80
     client = _mock_client(*values)
     results = run_all_checks(client)
     assert isinstance(results, list)
     assert len(results) > 0
     assert all(r.status in ("PASS", "WARN", "FAIL") for r in results)
+
+
+def test_universe_membership_fails_below_floor():
+    # 5 queries: DE _check, DE again, US _check, US again, overlap _check
+    # 10 DE members (< 120 floor → FAIL), 500 US (>= 450 → PASS), 0 overlaps
+    client = _mock_client(10, 10, 500, 500, 0)
+    results = check_universe_membership(client)
+    de = next(r for r in results if r.name == "Active DE members")
+    us = next(r for r in results if r.name == "Active US members")
+    overlap = next(r for r in results if r.name == "Overlapping spans")
+    assert de.status == "FAIL"
+    assert us.status == "PASS"
+    assert overlap.status == "PASS"
+
+
+def test_universe_membership_passes_above_floor():
+    # 150 DE (>= 120), 600 US (>= 450), 0 overlaps → all PASS
+    client = _mock_client(150, 150, 600, 600, 0)
+    results = check_universe_membership(client)
+    assert all(r.status == "PASS" for r in results)
+
+
+def test_universe_membership_fails_on_overlap():
+    # 150 DE, 600 US, 3 overlapping spans → overlap FAIL
+    client = _mock_client(150, 150, 600, 600, 3)
+    results = check_universe_membership(client)
+    overlap = next(r for r in results if r.name == "Overlapping spans")
+    assert overlap.status == "FAIL"
