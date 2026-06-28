@@ -175,9 +175,9 @@ def check_product_outputs(client: PostgresClient) -> list[CheckResult]:
              SELECT list_name, count(*) AS n
              FROM mart_product_top_lists_current
              GROUP BY list_name
-             HAVING (list_name = 'top_10' AND count(*) != 10)
-                 OR (list_name = 'top_20' AND count(*) != 20)
-                 OR (list_name = 'top_30' AND count(*) != 30)
+             HAVING (list_name = 'top_10' AND count(*) != 20)
+                 OR (list_name = 'top_20' AND count(*) != 40)
+                 OR (list_name = 'top_30' AND count(*) != 60)
            ) AS incomplete
            """,
            fail_if_nonzero=True)

@@ -232,7 +232,7 @@ Key fields: `ticker`, `market`, `entry_date`, `exit_date`, `entry_price`, `exit_
 **Grain:** one row per `(list_name, ticker, market)`  
 **Use for:** "what to buy this month" snapshot
 
-> ⚠️ **Known limitation:** `list_rank` is a global rank (not per-market). `top_10` gives 5 DE + 5 US, not 10 per market. For per-market top-10, use `StockIntelligence` with `momentum_rank_in_market <= 10` (see recipes below).
+> `list_rank` is per-market. `top_10` = 10 DE + 10 US (20 rows total). `top_30` = 30 DE + 30 US (60 rows total).
 
 | Field | Notes |
 |---|---|

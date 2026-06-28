@@ -2,10 +2,10 @@ cubes:
   - name: ProductTopLists
     title: Product Top Lists (Current)
     description: >
-      Current month's top 30 stock picks per market, pre-ranked.
+      Current month's top picks per market, pre-ranked within each market.
       One row per (list_name, ticker, market). list_name is one of
       top_10, top_20, top_30 — filter to the desired tier.
-      Use list_name = 'top_30' for maximum flexibility.
+      top_10 = 10 DE + 10 US (20 rows). top_30 = 30 DE + 30 US (60 rows).
 
     sql_table: dadayu.mart_product_top_lists_current
 
