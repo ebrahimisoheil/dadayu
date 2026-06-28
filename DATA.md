@@ -25,6 +25,92 @@ Daily OHLCV price history for **618 stocks** (US + Germany) and **26 macro instr
 
 ---
 
+## Index Universe History & Membership
+
+The universe is anchored in two reference datasets — a German backfill from STOXX PDF compositions, and a US backfill from GitHub historical S&P 500 data — now tracked forward via SCD2 snapshot pattern.
+
+### Architecture
+
+**Three layers:**
+
+1. **Backfill seeds** (committed CSVs, hand-reconciled)
+   - Germany: STOXX PDF compositions (`tools/parse_stoxx_compositions.py` → `warehouse/seeds/raw_stoxx_compositions.csv`)
+   - US: GitHub dataset (`tools/build_us_membership.py` → `warehouse/seeds/raw_us_membership.csv`)
+   - Both cover DAX, MDAX, SDAX, TecDAX (DE); S&P 500 (US)
+
+2. **Crosswalk & validation** (DE only; Germany has stricter historical data)
+   - `tools/resolve_de_membership.py` maps PDF company names → current Yahoo tickers + validates with ISIN
+   - Creates `warehouse/seeds/dim_equity_symbol_*` seed files (resolved tickers with valid_from/valid_to spans)
+
+3. **Live SCD2 snapshot** (forward from go-live)
+   - `snapshots/snap_dim_equity_symbol.sql` captures membership state at go-live
+   - Daily ingestion flags renames/additions/deletions; dbt merge upserts into `dim_equity_symbol`
+
+### Valid Span Convention
+
+- `valid_from` — **inclusive** (first day stock is in index)
+- `valid_to` — **exclusive** (first day stock is NOT in index); NULL = still active
+- Applies to all membership tables: seeds, historical snapshots, live mart
+
+### Point-in-Time Coverage
+
+**Best-effort, asymmetric by market:**
+
+| Index | Coverage | Notes |
+|-------|----------|-------|
+| DAX | Most complete (~5–10 years pre-go-live) | STOXX PDF has detailed historical compositions; most renames/delistings resolved via ISIN |
+| MDAX / SDAX | ~3 years pre-go-live | STOXX PDF less granular before 2020; some gaps in delisted tickers |
+| TecDAX | ~3 years pre-go-live | Fewer historical records; only recent years fully reliable |
+| S&P 500 | Best-effort 1957–present | GitHub dataset is retrospective; pre-2010 coverage has gaps; many defunct tickers excluded (no yfinance data) |
+
+**Pre-2010 defunct names** are explicitly excluded from US backfill. Reason: yfinance cannot fetch data for delisted tickers. Point-in-time queries on index membership before 2010 will be incomplete.
+
+### Membership Floor Thresholds
+
+Enforced daily by dbt `generic/test_floor_active_members.sql` and Python `checks.py::check_universe_floors()`.
+
+| Market | Min Active Members | Rationale |
+|--------|-------------------|-----------|
+| Germany (DAX + MDAX + SDAX + TecDAX) | ≥ 120 | Typical: ~160 members (DAX 40 + MDAX 60 + SDAX ~70 + TecDAX ~30) |
+| US (S&P 500) | ≥ 450 | Typical: ~500 members; threshold accounts for observed turnover + delists |
+
+**When thresholds fail:** ingestion halts; dbt test blocks commits; prod alert fires. Manual investigation required (PDF parse drift, yfinance delisting, data gap).
+
+### Refreshing Seeds
+
+Seeds are committed CSVs. To regenerate after updating source files (STOXX PDF, GitHub data):
+
+```bash
+# Germany: parse STOXX PDF → raw_stoxx_compositions.csv (manual review required)
+python tools/parse_stoxx_compositions.py
+
+# Germany: resolve names → valid_from/valid_to spans (needs ISIN crosswalk)
+python tools/resolve_de_membership.py
+
+# US: build S&P 500 history from GitHub dataset
+python tools/build_us_membership.py
+
+# Then commit updated CSVs to warehouse/seeds/
+git add warehouse/seeds/dim_equity_symbol_* warehouse/seeds/raw_*.csv
+git commit -m "refactor: refresh membership seeds from source [DATE]"
+
+# Trigger full warehouse rebuild
+dbt run --select tag:membership
+dbt test
+```
+
+**STOXX composition source:** https://www.stoxx.com/document/Indices/Common/Indexguide/Historical_Index_Compositions.pdf
+
+### Membership Tables
+
+| Table | Grain | Purpose |
+|-------|-------|---------|
+| `dim_equity_symbol` | ticker × valid_from × valid_to | Current membership state (dbt upsert from SCD2 snapshot) |
+| `snap_dim_equity_symbol` | Historical snapshots | Archive of daily membership snapshots (for point-in-time queries) |
+| Seed CSVs | Backfill only | `raw_stoxx_compositions.csv`, `raw_us_membership.csv`, `dim_equity_symbol_*.csv` |
+
+---
+
 ## Raw Price Data
 
 ### `prices_daily` — Equity OHLCV
