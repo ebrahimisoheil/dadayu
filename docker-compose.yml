@@ -55,7 +55,7 @@ services:
     container_name: dadayu_dagster_webserver
     command: dagster-webserver -h 0.0.0.0 -p 3000 -w /opt/dagster/home/workspace.yaml
     ports:
-      - "3000:3000"
+      - "127.0.0.1:13000:3000"
     env_file: .env
     environment:
       DAGSTER_HOME: /opt/dagster/home
@@ -126,7 +126,7 @@ services:
     image: cubejs/cube:latest
     container_name: dadayu_cube
     ports:
-      - "4000:4000"
+      - "127.0.0.1:14000:4000"
     environment:
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_HOST: dadayu_postgres
