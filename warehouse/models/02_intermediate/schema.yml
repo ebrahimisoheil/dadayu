@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: int_market_assets_daily
-    description: Unified daily equity and crypto asset prices.
+    description: Unified daily equity asset prices.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [ticker, market, ts]
@@ -98,15 +98,6 @@ models:
       - name: risk_bucket
         data_tests: [not_null]
 
-  - name: int_themes_constituents
-    description: Active theme membership with normalized weights.
-    columns:
-      - name: theme_id
-        data_tests: [not_null]
-      - name: ticker
-        data_tests: [not_null]
-      - name: market
-        data_tests: [not_null]
   - name: int_market_regime_daily
     description: Daily S&P 500 based market regime.
     columns:
@@ -140,3 +131,18 @@ models:
         data_tests:
           - accepted_values:
               values: [risk_on, neutral, risk_off]
+
+  - name: int_universe_membership_daily
+    description: Unified non-overlapping point-in-time membership spans per ticker/market.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['germany', 'us']}
+      - name: valid_from
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.expression_is_true:
+          expression: "valid_to IS NULL OR valid_to > valid_from"
