@@ -4,6 +4,7 @@ __pycache__
 *.pyc
 dagster_home/
 warehouse/target/
+!warehouse/target/manifest.json
 warehouse/logs/
 compose.override.yml
 .gstack/
