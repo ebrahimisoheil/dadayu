@@ -7,36 +7,47 @@ EPOCH = "1996-01-02"  # dataset start; spans open here when no earlier add is kn
 
 
 def to_spans(changes: list[dict], current: list[str], asof: str) -> list[dict]:
-    open_from: dict[str, str] = {t: EPOCH for t in current}
-    spans: list[dict] = []
-    # Tickers we have already seen a removal for (going backward means we see removes before adds)
-    removed_set: set[str] = set()
+    # Issue 1: cap the backward walk at asof so future changes are excluded.
+    filtered = [ch for ch in changes if ch["date"] <= asof]
 
-    for ch in sorted(changes, key=lambda c: c["date"], reverse=True):
+    open_from: dict[str, str] = {t: EPOCH for t in current}
+    # Issue 2: O(1) per-ticker span tracking — replaces the O(n²) removed_set linear scan.
+    # open_spans holds the currently-open (not-yet-closed) span for each ticker that has been
+    # seen in a "removed" event but whose matching "added" event has not been found yet.
+    open_spans: dict[str, dict] = {}
+    closed: list[dict] = []
+
+    for ch in sorted(filtered, key=lambda c: c["date"], reverse=True):
         date = ch["date"]
         for t in ch.get("added", []):
             if t in open_from:
-                # Currently active: found its add date — open span from here
+                # Currently active: found its add date — emit open span from here.
                 open_from.pop(t)
-                spans.append({"ticker": t, "market": "us", "index_name": "SP500",
-                              "valid_from": date, "valid_to": None})
-            elif t in removed_set:
-                # Was removed later (saw it going backward); update its span's valid_from to add date
-                for s in spans:
-                    if s["ticker"] == t and s["valid_to"] is not None and s["valid_from"] == EPOCH:
-                        s["valid_from"] = date
-                        break
-                removed_set.discard(t)
-            # else: no record of this ticker; skip (best-effort)
+                closed.append({"ticker": t, "market": "us", "index_name": "SP500",
+                               "valid_from": date, "valid_to": None})
+            elif t in open_spans:
+                # Was removed later (saw removal going backward); close the span now.
+                span = open_spans.pop(t)
+                span["valid_from"] = date
+                closed.append(span)
+            # else: no record of this ticker; skip (best-effort).
         for t in ch.get("removed", []):
-            removed_set.add(t)
-            spans.append({"ticker": t, "market": "us", "index_name": "SP500",
-                          "valid_from": EPOCH, "valid_to": date})
+            # Open a span with placeholder valid_from=EPOCH; it will be updated when we
+            # find the matching "added" event further back.  Using a dict gives O(1) lookup
+            # and correctly handles tickers with 3+ episodes (each add closes the current
+            # open_spans entry, freeing the key for the next removal going further back).
+            open_spans[t] = {"ticker": t, "market": "us", "index_name": "SP500",
+                             "valid_from": EPOCH, "valid_to": date}
 
+    # Current tickers whose add event was not found — span from dataset epoch.
     for t, start in open_from.items():
-        spans.append({"ticker": t, "market": "us", "index_name": "SP500",
-                      "valid_from": start, "valid_to": None})
-    return spans
+        closed.append({"ticker": t, "market": "us", "index_name": "SP500",
+                       "valid_from": start, "valid_to": None})
+
+    # Removed tickers whose add event was not found — span from dataset epoch.
+    closed.extend(open_spans.values())
+
+    return closed
 
 
 def _load_changes(path: str) -> list[dict]:
