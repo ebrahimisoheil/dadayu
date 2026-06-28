@@ -1,0 +1,124 @@
+ticker,market,name
+AAPL,us,Apple
+MSFT,us,Microsoft
+NVDA,us,NVIDIA
+AMD,us,Advanced Micro Devices
+AVGO,us,Broadcom
+SMCI,us,Super Micro Computer
+IONQ,us,IonQ
+RGTI,us,Rigetti Computing
+QBTS,us,D-Wave Quantum
+IBM,us,IBM
+GOOGL,us,Alphabet
+AMZN,us,Amazon
+META,us,Meta Platforms
+TSLA,us,Tesla
+RIVN,us,Rivian
+F,us,Ford
+GM,us,General Motors
+BYDDY,us,BYD ADR
+ALB,us,Albemarle
+ENPH,us,Enphase Energy
+FSLR,us,First Solar
+RUN,us,Sunrun
+SEDG,us,SolarEdge
+COIN,us,Coinbase
+MSTR,us,MicroStrategy
+MARA,us,MARA Holdings
+RIOT,us,Riot Platforms
+XYZ,us,Block
+PYPL,us,PayPal
+SOFI,us,SoFi
+HOOD,us,Robinhood
+AFRM,us,Affirm
+PLTR,us,Palantir
+SNOW,us,Snowflake
+CRWD,us,CrowdStrike
+DDOG,us,Datadog
+NET,us,Cloudflare
+PANW,us,Palo Alto Networks
+ZS,us,Zscaler
+MDB,us,MongoDB
+LMT,us,Lockheed Martin
+RTX,us,RTX
+BA,us,Boeing
+NOC,us,Northrop Grumman
+GD,us,General Dynamics
+XOM,us,Exxon Mobil
+CVX,us,Chevron
+COP,us,ConocoPhillips
+SLB,us,SLB
+OXY,us,Occidental Petroleum
+LLY,us,Eli Lilly
+NVO,us,Novo Nordisk ADR
+MRNA,us,Moderna
+VRTX,us,Vertex
+ISRG,us,Intuitive Surgical
+NEE,us,NextEra Energy
+DUK,us,Duke Energy
+SO,us,Southern Company
+CCJ,us,Cameco
+CEG,us,Constellation Energy
+OKTA,us,Okta
+REGN,us,Regeneron
+AMGN,us,Amgen
+GILD,us,Gilead Sciences
+ROK,us,Rockwell Automation
+ABBNY,us,ABB ADR
+CRM,us,Salesforce
+NOW,us,ServiceNow
+SNAP,us,Snap
+PINS,us,Pinterest
+SHOP,us,Shopify
+EBAY,us,eBay
+MELI,us,MercadoLibre
+NFLX,us,Netflix
+DIS,us,Disney
+ROKU,us,Roku
+SPOT,us,Spotify
+JPM,us,JPMorgan Chase
+BAC,us,Bank of America
+GS,us,Goldman Sachs
+MS,us,Morgan Stanley
+BRK-B,us,Berkshire Hathaway
+AIG,us,AIG
+CB,us,Chubb
+LVMUY,us,LVMH ADR
+EL,us,Estee Lauder
+NKE,us,Nike
+ABNB,us,Airbnb
+BKNG,us,Booking Holdings
+DAL,us,Delta Air Lines
+MAR,us,Marriott
+ABT,us,Abbott Laboratories
+MDT,us,Medtronic
+SYK,us,Stryker
+JNJ,us,Johnson & Johnson
+MRK,us,Merck
+PFE,us,Pfizer
+FCX,us,Freeport-McMoRan
+NEM,us,Newmont
+LIN,us,Linde
+PLD,us,Prologis
+AMT,us,American Tower
+EQIX,us,Equinix
+O,us,Realty Income
+VZ,us,Verizon
+T,us,AT&T
+UNP,us,Union Pacific
+UPS,us,UPS
+FDX,us,FedEx
+INTC,us,Intel
+QCOM,us,Qualcomm
+MU,us,Micron
+SAP.DE,germany,SAP
+SIE.DE,germany,Siemens
+IFX.DE,germany,Infineon
+RHM.DE,germany,Rheinmetall
+ENR.DE,germany,Siemens Energy
+AIR.DE,germany,Airbus
+ALV.DE,germany,Allianz
+DTE.DE,germany,Deutsche Telekom
+VOW3.DE,germany,Volkswagen
+BMW.DE,germany,BMW
+MBG.DE,germany,Mercedes-Benz

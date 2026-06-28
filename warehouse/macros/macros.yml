@@ -106,18 +106,6 @@ macros:
         type: float
         description: Standard deviation multiplier (default 2)
 
-  - name: ch_table_engine
-    arguments:
-      - name: order_by
-        type: string
-        description: ORDER BY clause columns for ReplacingMergeTree
-      - name: partition_by
-        type: string
-        description: Optional PARTITION BY clause (default none)
-      - name: version_col
-        type: string
-        description: Version column for deduplication (default ingested_at)
-
   - name: time_bucket
     arguments:
       - name: col

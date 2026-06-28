@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import clickhouse_connect
 import pandas as pd
+
+from dadayu.db import PostgresClient
 
 
 def insert_ohlcv(
-    client: clickhouse_connect.driver.Client,
+    client: PostgresClient,
     table: str,
     df: pd.DataFrame,
     market: str,
@@ -39,6 +40,11 @@ def insert_ohlcv(
 
     total = 0
     for _, chunk in data.groupby("_ym"):
-        client.insert_df(table, chunk.drop(columns=["_ym"]))
+        client.upsert_df(
+            table,
+            chunk.drop(columns=["_ym"]),
+            conflict_cols=["ticker", "market", "date"],
+            update_cols=["open", "high", "low", "close", "volume", "ingested_at"],
+        )
         total += len(chunk)
     print(f"  Inserted {total:,} rows into {table} [{market}]")

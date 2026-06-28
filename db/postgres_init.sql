@@ -50,30 +50,6 @@ CREATE TABLE IF NOT EXISTS tickers (
     PRIMARY KEY (ticker, market)
 );
 
-CREATE TABLE IF NOT EXISTS crypto_prices_daily (
-    ticker text NOT NULL,
-    market text NOT NULL DEFAULT 'crypto',
-    date date NOT NULL,
-    open double precision,
-    high double precision,
-    low double precision,
-    close double precision,
-    volume bigint NOT NULL DEFAULT 0,
-    ingested_at timestamp NOT NULL DEFAULT current_timestamp,
-    PRIMARY KEY (ticker, market, date)
-);
-
-CREATE TABLE IF NOT EXISTS crypto_metadata (
-    coin_id text PRIMARY KEY,
-    symbol text NOT NULL,
-    name text NOT NULL,
-    rank integer NOT NULL DEFAULT 0,
-    market_cap double precision,
-    category text NOT NULL DEFAULT '',
-    chain text NOT NULL DEFAULT '',
-    fetched_at timestamp NOT NULL DEFAULT current_timestamp
-);
-
 CREATE TABLE IF NOT EXISTS macro_prices_daily (
     ticker      text NOT NULL,
     market      text NOT NULL DEFAULT 'macro',

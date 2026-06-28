@@ -8,8 +8,8 @@ snapshots:
         description: Surrogate key — hash of ticker and market
         data_tests: [not_null]
       - name: ticker
-        description: yfinance symbol (e.g. AAPL, SAP.DE, INFY.NS)
+        description: yfinance symbol (e.g. AAPL, SAP.DE)
         data_tests: [not_null]
       - name: market
-        description: Market identifier — germany, us, or india
+        description: Market identifier — germany or us
         data_tests: [not_null]

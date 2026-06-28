@@ -3,19 +3,23 @@ from __future__ import annotations
 from dagster import AssetKey, Failure, MetadataValue, Output, asset
 
 from dadayu.checks import CheckResult, run_all_checks
-from dagster_pipeline.resources import ClickhouseResource
+from dagster_pipeline.resources import PostgresResource
 
 
 @asset(
     group_name="quality",
     deps=[
-        AssetKey("fct_ohlcv_1h"),
-        AssetKey("fct_indicators_1d"),
-        AssetKey("fct_polymarket_signals"),
+        AssetKey("int_market_data_quality_daily"),
+        AssetKey("mart_portfolio_asset_scores_daily"),
+        AssetKey("mart_macro_regime_daily"),
+        AssetKey("mart_universe_health_current"),
+        AssetKey("mart_product_top_lists_current"),
+        AssetKey("mart_backtest_trades"),
+        AssetKey("mart_backtest_performance"),
     ],
 )
-def data_quality(clickhouse: ClickhouseResource) -> Output:
-    client = clickhouse.get_client()
+def data_quality(postgres: PostgresResource) -> Output:
+    client = postgres.get_client()
     results = run_all_checks(client)
 
     fail_count = sum(1 for r in results if r.status == "FAIL")

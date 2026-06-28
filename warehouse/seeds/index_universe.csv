@@ -1,0 +1,7 @@
+index_id,ticker,market,name,region,benchmark_type
+sp500,^GSPC,index,S&P 500,us,broad_equity
+nasdaq100,^NDX,index,Nasdaq 100,us,growth_equity
+dow_jones,^DJI,index,Dow Jones Industrial Average,us,blue_chip
+russell2000,^RUT,index,Russell 2000,us,small_cap
+vix,^VIX,index,CBOE Volatility Index,us,volatility
+dax,^GDAXI,index,DAX,germany,broad_equity

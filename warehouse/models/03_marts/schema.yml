@@ -1,0 +1,239 @@
+version: 2
+
+models:
+  - name: mart_portfolio_asset_scores_daily
+    description: Daily product asset scores for equities.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [score_date, ticker, market]
+    columns:
+      - name: score_date
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: risk_bucket
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['low', 'medium', 'high']
+
+  - name: mart_portfolio_ranker_weekly
+    description: Weekly product ranker output.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, ticker, market]
+    columns:
+      - name: week_start
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+
+  - name: mart_market_regime_daily
+    description: Daily benchmark market regime.
+    columns:
+      - name: ts
+        data_tests: [not_null]
+
+  - name: mart_sector_scores_daily
+    description: Daily sector-level score, breadth, momentum, and risk aggregates.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [score_date, market, sector]
+    columns:
+      - name: score_date
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: sector
+        data_tests: [not_null]
+
+  - name: mart_industry_scores_daily
+    description: Daily industry-level score, breadth, momentum, and risk aggregates.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [score_date, market, sector, industry]
+    columns:
+      - name: score_date
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: sector
+        data_tests: [not_null]
+      - name: industry
+        data_tests: [not_null]
+
+  - name: mart_sector_ranker_weekly
+    description: Weekly sector ranker from the last daily sector score in each week.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, market, sector]
+    columns:
+      - name: week_start
+        data_tests: [not_null]
+      - name: score_date
+        data_tests: [not_null]
+      - name: sector
+        data_tests: [not_null]
+
+  - name: mart_industry_ranker_weekly
+    description: Weekly industry ranker from the last daily industry score in each week.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, market, sector, industry]
+    columns:
+      - name: week_start
+        data_tests: [not_null]
+      - name: score_date
+        data_tests: [not_null]
+      - name: industry
+        data_tests: [not_null]
+
+  - name: mart_universe_health_current
+    description: Current intended equity universe health flags for price history, metadata, and product eligibility.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ticker, market]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: universe_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['ok', 'no_price_history', 'stale_price_history', 'missing_sector_or_industry', 'missing_market_cap', 'not_rankable_latest']
+
+  - name: mart_product_stock_recommendations_daily
+    description: Daily product-ready ranked stock rows with top-list bucket, action bucket, and explanatory fields.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [score_date, ticker, market]
+    columns:
+      - name: score_date
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: product_rank
+        data_tests: [not_null]
+      - name: action_bucket
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['buy_candidate', 'watch', 'hold', 'avoid']
+      - name: rank_list_bucket
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['top_10', 'top_20', 'top_30', 'watchlist', 'long_tail']
+
+  - name: mart_product_stock_recommendations_weekly
+    description: Weekly product-ready ranked stock rows from the last daily recommendation date in each week.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, ticker, market]
+    columns:
+      - name: week_start
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: weekly_product_rank
+        data_tests: [not_null]
+
+  - name: mart_product_top_lists_current
+    description: Current duplicated top-10, top-20, and top-30 stock lists for a simple product/API surface.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [list_name, ticker, market]
+    columns:
+      - name: list_name
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['top_10', 'top_20', 'top_30']
+      - name: as_of_date
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+
+  - name: mart_briefing_portfolio_daily
+    description: Daily briefing-ready asset rows with score, risk, regime, and peer context.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [score_date, ticker, market]
+    columns:
+      - name: score_date
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: risk_bucket
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['low', 'medium', 'high']
+
+  - name: mart_briefing_portfolio_weekly
+    description: Weekly briefing snapshot from the last rankable daily score in each week.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, ticker, market]
+    columns:
+      - name: week_start
+        data_tests: [not_null]
+      - name: period_end
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+
+  - name: mart_briefing_portfolio_monthly
+    description: Monthly briefing snapshot from the last rankable daily score in each month.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [month_start, ticker, market]
+    columns:
+      - name: month_start
+        data_tests: [not_null]
+      - name: period_end
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+
+  - name: mart_briefing_portfolio_quarterly
+    description: Quarterly briefing snapshot from the last rankable daily score in each quarter.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [quarter_start, ticker, market]
+    columns:
+      - name: quarter_start
+        data_tests: [not_null]
+      - name: period_end
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+
+  - name: mart_briefing_portfolio_6m
+    description: Half-year briefing snapshot from the last rankable daily score in each half-year.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [half_year_start, ticker, market]
+    columns:
+      - name: half_year_start
+        data_tests: [not_null]
+      - name: period_end
+        data_tests: [not_null]
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]

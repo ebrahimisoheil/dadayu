@@ -9,7 +9,7 @@
     avg({{ col }}) OVER (
         PARTITION BY ticker, market ORDER BY ts
         ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
-    ) + {{ k }} * stddevPop({{ col }}) OVER (
+    ) + {{ k }} * stddev_pop({{ col }}) OVER (
         PARTITION BY ticker, market ORDER BY ts
         ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
     )
@@ -19,7 +19,7 @@
     avg({{ col }}) OVER (
         PARTITION BY ticker, market ORDER BY ts
         ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
-    ) - {{ k }} * stddevPop({{ col }}) OVER (
+    ) - {{ k }} * stddev_pop({{ col }}) OVER (
         PARTITION BY ticker, market ORDER BY ts
         ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
     )

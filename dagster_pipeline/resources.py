@@ -4,6 +4,6 @@ import dadayu.db
 from dagster import ConfigurableResource
 
 
-class ClickhouseResource(ConfigurableResource):
+class PostgresResource(ConfigurableResource):
     def get_client(self):
-        return dadayu.db.get_ch_client()
+        return dadayu.db.get_pg_client()

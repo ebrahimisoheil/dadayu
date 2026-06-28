@@ -5,22 +5,14 @@ Usage: python scripts/check_data_quality.py
 """
 from __future__ import annotations
 
-import os
 import sys
 
-import clickhouse_connect
-
+from dadayu.db import PostgresClient, get_pg_client
 from dadayu.checks import CheckResult, run_all_checks
 
 
-def get_client() -> clickhouse_connect.driver.Client:
-    return clickhouse_connect.get_client(
-        host=os.getenv("CLICKHOUSE_HOST", "localhost"),
-        port=int(os.getenv("CLICKHOUSE_PORT", "8123")),
-        database=os.getenv("CLICKHOUSE_DB", "dadayu"),
-        username=os.getenv("CLICKHOUSE_USER", "dadayu"),
-        password=os.getenv("CLICKHOUSE_PASSWORD", "changeme"),
-    )
+def get_client() -> PostgresClient:
+    return get_pg_client()
 
 
 def print_report(results: list[CheckResult]) -> int:
@@ -48,9 +40,9 @@ def print_report(results: list[CheckResult]) -> int:
 
 
 if __name__ == "__main__":
-    print("Connecting to ClickHouse...")
+    print("Connecting to PostgreSQL...")
     client = get_client()
-    print(f"Connected: {os.getenv('CLICKHOUSE_HOST', 'localhost')}:{os.getenv('CLICKHOUSE_PORT', '8123')} / {os.getenv('CLICKHOUSE_DB', 'dadayu')}")
+    print("Connected to DADAYU PostgreSQL warehouse")
 
     results = run_all_checks(client)
     exit_code = print_report(results)

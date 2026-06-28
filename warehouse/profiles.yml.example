@@ -2,12 +2,11 @@ dadayu:
   target: dev
   outputs:
     dev:
-      type: clickhouse
+      type: postgres
+      dbname: "{{ env_var('DADAYU_PG_DB', 'dadayu') }}"
       schema: dadayu
-      host: dadayu_clickhouse   # use 'localhost' when running dbt outside Docker
-      port: 8123
-      user: dadayu
-      password: changeme        # replace with actual password from .env
-      secure: false
-      connect_timeout: 10
-      send_receive_timeout: 300
+      host: "{{ env_var('DADAYU_PG_HOST', 'localhost') }}"
+      port: "{{ env_var('DADAYU_PG_PORT', 5432) | as_number }}"
+      user: "{{ env_var('DADAYU_PG_USER', 'dadayu') }}"
+      password: "{{ env_var('DADAYU_PG_PASSWORD', 'dadayu') }}"
+      threads: 4

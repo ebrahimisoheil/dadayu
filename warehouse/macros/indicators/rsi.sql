@@ -8,7 +8,7 @@
         1.0 + avg({{ gain_col }}) OVER (
             PARTITION BY ticker, market ORDER BY ts
             ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW
-        ) / nullIf(
+        ) / nullif(
             avg({{ loss_col }}) OVER (
                 PARTITION BY ticker, market ORDER BY ts
                 ROWS BETWEEN {{ n - 1 }} PRECEDING AND CURRENT ROW

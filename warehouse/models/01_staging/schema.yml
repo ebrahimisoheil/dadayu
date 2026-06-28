@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_yahoo__equity_ohlcv_daily
+    description: Daily US and Germany equity OHLCV.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['us', 'germany']
+      - name: ts
+        data_tests: [not_null]
+      - name: close
+        data_tests: [not_null]
+
+  - name: stg_yahoo__index_ohlcv_daily
+    description: Daily benchmark/index OHLCV.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+      - name: ts
+        data_tests: [not_null]
+      - name: close
+        data_tests: [not_null]
+
+  - name: stg_yahoo__ticker_info
+    description: Current equity metadata from yfinance.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['us', 'germany']

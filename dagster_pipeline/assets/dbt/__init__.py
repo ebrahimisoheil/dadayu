@@ -1,3 +1,4 @@
+from dagster_pipeline.assets.dbt.backtests import dbt_backtest_assets
 from dagster_pipeline.assets.dbt.marts import dbt_mart_assets
 from dagster_pipeline.assets.dbt.quality import data_quality
 from dagster_pipeline.assets.dbt.seeds import dbt_seed_assets
@@ -9,5 +10,6 @@ __all__ = [
     "dbt_staging_assets",
     "dbt_snapshot_assets",
     "dbt_mart_assets",
+    "dbt_backtest_assets",
     "data_quality",
 ]

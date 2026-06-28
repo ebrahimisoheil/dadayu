@@ -18,10 +18,10 @@ def test_get_watermark_returns_next_day():
 def test_get_watermark_with_market_uses_param():
     import datetime
     client = _mock_client(datetime.date(2026, 5, 10))
-    result = get_watermark(client, "prices_hourly", "datetime", market="us")
+    result = get_watermark(client, "prices_daily", "date", market="us")
     assert result == "2026-05-11"
     call_args = client.query.call_args
-    assert "{market:String}" in call_args[0][0]
+    assert "%(market)s" in call_args[0][0]
     assert call_args[1]["parameters"]["market"] == "us"
 
 
@@ -35,20 +35,4 @@ def test_get_watermark_returns_none_on_exception():
     client = MagicMock()
     client.query.side_effect = Exception("connection failed")
     result = get_watermark(client, "prices_daily", "date")
-    assert result is None
-
-
-def test_get_watermark_with_condition_id_uses_param():
-    import datetime
-    client = _mock_client(datetime.datetime(2026, 5, 18, 12, 0, 0))
-    result = get_watermark(client, "polymarket_prices", "ts", condition_id="0xabc123")
-    assert result == "2026-05-19"
-    call_args = client.query.call_args
-    assert "{condition_id:String}" in call_args[0][0]
-    assert call_args[1]["parameters"]["condition_id"] == "0xabc123"
-
-
-def test_get_watermark_condition_id_returns_none_when_empty():
-    client = _mock_client(None)
-    result = get_watermark(client, "polymarket_prices", "ts", condition_id="0xabc123")
     assert result is None

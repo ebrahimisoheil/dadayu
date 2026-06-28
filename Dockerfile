@@ -10,4 +10,4 @@ ENV DAGSTER_HOME=/opt/dagster/home
 
 COPY . .
 
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["dagster", "code-server", "start", "-h", "0.0.0.0", "-p", "4000", "-m", "dagster_pipeline.definitions"]

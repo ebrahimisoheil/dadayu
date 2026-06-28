@@ -11,6 +11,6 @@
             PARTITION BY ticker, market ORDER BY ts
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ),
-        toFloat64(-1)
+        todouble precision(-1)
     )
 {% endmacro %}

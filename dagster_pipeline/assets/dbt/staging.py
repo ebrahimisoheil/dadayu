@@ -7,7 +7,7 @@ from dagster_pipeline.assets.dbt._common import DBT_MANIFEST, DadayuDbtTranslato
 
 @dbt_assets(
     manifest=DBT_MANIFEST,
-    select="staging",
+    select="01_staging",
     dagster_dbt_translator=DadayuDbtTranslator(),
 )
 def dbt_staging_assets(context, dbt: DbtCliResource):
