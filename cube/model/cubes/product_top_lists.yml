@@ -1,0 +1,97 @@
+cubes:
+  - name: ProductTopLists
+    title: Product Top Lists (Current)
+    description: >
+      Current month's top 30 stock picks per market, pre-ranked.
+      One row per (list_name, ticker, market). list_name is one of
+      top_10, top_20, top_30 — filter to the desired tier.
+      Use list_name = 'top_30' for maximum flexibility.
+
+    sql_table: dadayu.mart_product_top_lists_current
+
+    dimensions:
+      - name: id
+        sql: "list_name || '|' || ticker || '|' || market"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: list_name
+        sql: list_name
+        type: string
+        title: List Name
+
+      - name: as_of_date
+        sql: as_of_date
+        type: time
+        title: As Of Date
+
+      - name: list_rank
+        sql: list_rank
+        type: number
+        title: Rank
+
+      - name: ticker
+        sql: ticker
+        type: string
+        title: Ticker
+
+      - name: market
+        sql: market
+        type: string
+        title: Market
+
+      - name: name
+        sql: name
+        type: string
+        title: Company Name
+
+      - name: sector
+        sql: sector
+        type: string
+        title: Sector
+
+      - name: industry
+        sql: industry
+        type: string
+        title: Industry
+
+      - name: close
+        sql: close
+        type: number
+        title: Last Close Price
+
+      - name: total_score
+        sql: total_score
+        type: number
+        title: Total Score
+
+      - name: risk_bucket
+        sql: risk_bucket
+        type: string
+        title: Risk Bucket
+
+      - name: action_bucket
+        sql: action_bucket
+        type: string
+        title: Action Bucket
+
+      - name: primary_signal_reason
+        sql: primary_signal_reason
+        type: string
+        title: Signal Reason
+
+      - name: risk_note
+        sql: risk_note
+        type: string
+        title: Risk Note
+
+      - name: product_disclaimer
+        sql: product_disclaimer
+        type: string
+        title: Disclaimer
+
+    measures:
+      - name: count
+        type: count
+        title: Count
