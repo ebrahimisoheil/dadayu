@@ -27,30 +27,30 @@ Daily OHLCV price history for **618 stocks** (US + Germany) and **26 macro instr
 
 ## Index Universe History & Membership
 
-The universe is anchored in two reference datasets — a German backfill from STOXX PDF compositions, and a US backfill from GitHub historical SP500 data — now tracked forward via SCD2 snapshot pattern.
+The universe is anchored in two committed seed CSVs (DE backfill from STOXX PDF; US backfill from GitHub SP500 dataset) and tracked forward via a dbt SCD2 snapshot of live-scraped membership. All three layers are merged by `int_universe_membership_daily` into non-overlapping point-in-time spans.
 
 ### Architecture
 
 **Three layers:**
 
-1. **Backfill seeds** (committed CSVs, hand-reconciled)
-   - Germany: STOXX PDF compositions (`tools/parse_stoxx_compositions.py` → `warehouse/seeds/raw_stoxx_compositions.csv`)
-   - US: GitHub dataset (`tools/build_us_membership.py` → `warehouse/seeds/raw_us_membership.csv`)
-   - Both cover DAX, MDAX, SDAX, TecDAX (DE); SP500 (US)
+1. **Backfill seeds** (committed CSVs, hand-reconciled — source of truth)
+   - Germany: `warehouse/seeds/seed_index_membership_de.csv` (resolved; covers DAX, MDAX, SDAX, TecDAX)
+   - Germany raw: `warehouse/seeds/seed_index_membership_de_raw.csv` (PDF parser output, input to resolver)
+   - Germany crosswalk: `warehouse/seeds/seed_index_name_ticker_map.csv` (company name → .DE ticker)
+   - US: `warehouse/seeds/seed_index_membership_us.csv` (SP500 spans back to 1996)
 
-2. **Crosswalk & validation** (DE only; Germany has stricter historical data)
-   - `tools/resolve_de_membership.py` maps PDF company names → current Yahoo tickers + validates with ISIN
-   - Creates `warehouse/seeds/dim_equity_symbol_*` seed files (resolved tickers with valid_from/valid_to spans)
+2. **Live SCD2 snapshot** (forward from go-live)
+   - `warehouse/snapshots/snap_index_membership.sql` — dbt snapshot of `stg_membership__observed`
+   - Each Dagster ingest run writes current index membership to `index_membership_observed`; dbt snapshot closes spans when a ticker leaves
 
-3. **Live SCD2 snapshot** (forward from go-live)
-   - `snapshots/snap_dim_equity_symbol.sql` captures membership state at go-live
-   - Daily ingestion flags renames/additions/deletions; dbt merge upserts into `dim_equity_symbol`
+3. **Unified model**
+   - `int_universe_membership_daily` — merges seeds + snapshot via island-and-gap, producing one non-overlapping span set per `(ticker, market)`
 
 ### Valid Span Convention
 
 - `valid_from` — **inclusive** (first day stock is in index)
 - `valid_to` — **exclusive** (first day stock is NOT in index); NULL = still active
-- Applies to all membership tables: seeds, historical snapshots, live mart
+- Applies to all three layers
 
 ### Point-in-Time Coverage
 
@@ -58,56 +58,63 @@ The universe is anchored in two reference datasets — a German backfill from ST
 
 | Index | Coverage | Notes |
 |-------|----------|-------|
-| DAX | Most complete (~5–10 years pre-go-live) | STOXX PDF has detailed historical compositions; most renames/delistings resolved via ISIN |
-| MDAX / SDAX | ~3 years pre-go-live | STOXX PDF less granular before 2020; some gaps in delisted tickers |
-| TecDAX | ~3 years pre-go-live | Fewer historical records; only recent years fully reliable |
-| SP500 | Best-effort 1957–present | GitHub dataset is retrospective; pre-2010 coverage has gaps; many defunct tickers excluded (no yfinance data) |
+| DAX | ~1988–present | STOXX PDF has detailed historical compositions; pre-2010 defunct names excluded (no yfinance data) |
+| MDAX / SDAX / TecDAX | ~2003–present | STOXX PDF less granular before 2020; some gaps in delisted tickers |
+| SP500 | ~1996–present | GitHub dataset (fja05680/sp500); pre-2010 coverage best-effort |
 
-**Pre-2010 defunct names** are explicitly excluded from US backfill. Reason: yfinance cannot fetch data for delisted tickers. Point-in-time queries on index membership before 2010 will be incomplete.
+**Pre-2010 defunct names** are excluded from both backfills — yfinance cannot fetch data for delisted tickers; those tickers would produce empty OHLCV tables.
 
 ### Membership Floor Thresholds
 
-Enforced daily by dbt `generic/test_floor_active_members.sql` and Python `checks.py::check_universe_floors()`.
+Enforced by dbt singular tests (`warehouse/tests/universe_active_floor_de.sql`, `universe_active_floor_us.sql`) and Python `checks.py::check_universe_membership()`.
 
 | Market | Min Active Members | Rationale |
 |--------|-------------------|-----------|
-| Germany (DAX + MDAX + SDAX + TecDAX) | ≥ 120 | Typical: ~160 members (DAX 40 + MDAX 60 + SDAX ~70 + TecDAX ~30) |
-| US (SP500) | ≥ 450 | Typical: ~500 members; threshold accounts for observed turnover + delists |
+| Germany (DAX + MDAX + SDAX + TecDAX) | ≥ 120 | Typical: ~139+ members |
+| US (SP500) | ≥ 450 | Typical: ~500 members; threshold accounts for turnover |
 
-**When thresholds fail:** ingestion halts; dbt test blocks commits; prod alert fires. Manual investigation required (PDF parse drift, yfinance delisting, data gap).
+**Bootstrap note:** On a fresh clone with no prior Dagster run, the DE floor is met by seeds alone (139 active). The US floor is met by `seed_index_membership_us.csv` (503 active). The SCD2 snapshot starts empty and fills after the first `equity_index_membership` asset run.
 
 ### Refreshing Seeds
 
 Seeds are committed CSVs. To regenerate after updating source files (STOXX PDF, GitHub data):
 
 ```bash
-# Germany: parse STOXX PDF → raw_stoxx_compositions.csv (manual review required)
-python tools/parse_stoxx_compositions.py
+# Germany: parse STOXX PDF → raw seed (manual review required before committing)
+curl -sL -A "Mozilla/5.0" -o /tmp/stoxx.pdf \
+  "https://www.stoxx.com/document/Indices/Common/Indexguide/Historical_Index_Compositions.pdf"
+python3 tools/parse_stoxx_compositions.py /tmp/stoxx.pdf warehouse/seeds/seed_index_membership_de_raw.csv
 
-# Germany: resolve names → valid_from/valid_to spans (needs ISIN crosswalk)
-python tools/resolve_de_membership.py
+# Germany: resolve names → tickers using crosswalk
+python3 tools/resolve_de_membership.py \
+  warehouse/seeds/seed_index_membership_de_raw.csv \
+  warehouse/seeds/seed_index_name_ticker_map.csv \
+  warehouse/seeds/seed_index_membership_de.csv
 
-# US: build SP500 history from GitHub dataset
-python tools/build_us_membership.py
+# US: rebuild from GitHub changes CSV + current constituents
+# (download changes.csv and current.txt from fja05680/sp500, then:)
+python3 tools/build_us_membership.py changes.csv current.txt 2026-06-28 \
+  warehouse/seeds/seed_index_membership_us.csv
 
-# Then commit updated CSVs to warehouse/seeds/
-git add warehouse/seeds/dim_equity_symbol_* warehouse/seeds/raw_*.csv
+# Commit updated CSVs
+git add warehouse/seeds/seed_index_membership_de_raw.csv \
+        warehouse/seeds/seed_index_membership_de.csv \
+        warehouse/seeds/seed_index_name_ticker_map.csv \
+        warehouse/seeds/seed_index_membership_us.csv
 git commit -m "refactor: refresh membership seeds from source [DATE]"
 
-# Trigger full warehouse rebuild
-dbt run --select tag:membership
-dbt test
+# Reload seeds + rebuild affected models
+cd warehouse && dbt seed && dbt run --select int_universe_membership_daily && dbt test
 ```
-
-**STOXX composition source:** https://www.stoxx.com/document/Indices/Common/Indexguide/Historical_Index_Compositions.pdf
 
 ### Membership Tables
 
 | Table | Grain | Purpose |
 |-------|-------|---------|
-| `dim_equity_symbol` | ticker × valid_from × valid_to | Current membership state (dbt upsert from SCD2 snapshot) |
-| `snap_dim_equity_symbol` | Historical snapshots | Archive of daily membership snapshots (for point-in-time queries) |
-| Seed CSVs | Backfill only | `raw_stoxx_compositions.csv`, `raw_us_membership.csv`, `dim_equity_symbol_*.csv` |
+| `seed_index_membership_de` | ticker × index × valid_from | DE membership spans from STOXX PDF (resolved) |
+| `seed_index_membership_us` | ticker × valid_from | US SP500 spans from GitHub dataset |
+| `snap_index_membership` | ticker × market × dbt_valid_from | SCD2 snapshot of live-scraped membership |
+| `int_universe_membership_daily` | ticker × market × valid_from | Merged, non-overlapping spans (query here) |
 
 ---
 
