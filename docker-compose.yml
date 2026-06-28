@@ -136,7 +136,7 @@ services:
       CUBEJS_DB_PASS: ${DADAYU_PG_PASSWORD:-dadayu}
       CUBEJS_DB_SCHEMA: dadayu
       CUBEJS_API_SECRET: ${CUBE_API_SECRET:-dadayu_cube_secret_change_in_prod}
-      CUBEJS_DEV_MODE: "true"
+      CUBEJS_DEV_MODE: ${CUBEJS_DEV_MODE:-true}
     volumes:
       - ./cube:/cube/conf
     depends_on:

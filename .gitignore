@@ -1,4 +1,8 @@
 
+# secrets — never commit
+.env
+warehouse/profiles.yml
+
 # dbt generated
 warehouse/dbt_packages/
 warehouse/target/
