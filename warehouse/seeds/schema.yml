@@ -1,0 +1,51 @@
+version: 2
+
+seeds:
+  - name: index_universe
+    description: Supported daily market indexes and benchmarks.
+    columns:
+      - name: index_id
+        data_tests:
+          - not_null
+          - unique
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests: [not_null]
+  - name: seed_index_membership_de
+    description: Point-in-time DE index membership reconstructed from STOXX historical compositions.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['germany']}
+      - name: index_name
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['DAX', 'MDAX', 'SDAX', 'TecDAX']}
+      - name: valid_from
+        data_tests: [not_null]
+  - name: seed_index_membership_us
+    description: Point-in-time US S&P 500 membership from the GitHub historical dataset.
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: market
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['us']}
+      - name: index_name
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['SP500']}
+      - name: valid_from
+        data_tests: [not_null]
+  - name: seed_index_name_ticker_map
+    description: Crosswalk from STOXX German company names to yfinance .DE tickers.
+    columns:
+      - name: company_name
+        data_tests: [not_null, unique]
+      - name: ticker
+        data_tests: [not_null]

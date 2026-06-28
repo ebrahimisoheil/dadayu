@@ -19,8 +19,6 @@ models:
   dadayu_warehouse:
     01_staging:
       +materialized: view
-      coingecko:
-        +materialized: view
     02_intermediate:
       +materialized: view
     03_marts:
@@ -34,12 +32,6 @@ seeds:
         industry_group_id: text
         industry_id: text
         sub_industry_id: text
-    crypto_universe:
-      +column_types:
-        symbol: text
-        coingecko_id: text
-        name: text
-        category: text
     equity_universe_extra:
       +column_types:
         ticker: text
@@ -55,22 +47,6 @@ seeds:
         name: text
         region: text
         benchmark_type: text
-    stock_themes:
-      +column_types:
-        theme_id: text
-        theme_name: text
-        description: text
-        is_active: integer
-        launch_status: text
-    stock_theme_constituents:
-      +column_types:
-        theme_id: text
-        ticker: text
-        market: text
-        is_primary_theme: integer
-        theme_weight: double precision
-        conviction: text
-        rationale: text
     macro_universe:
       +column_types:
         macro_id: text
@@ -79,6 +55,24 @@ seeds:
         name: text
         instrument_type: text
         regime_dimension: text
+    seed_index_membership_de:
+      +column_types:
+        ticker: text
+        market: text
+        index_name: text
+        valid_from: date
+        valid_to: date
+    seed_index_membership_us:
+      +column_types:
+        ticker: text
+        market: text
+        index_name: text
+        valid_from: date
+        valid_to: date
+    seed_index_name_ticker_map:
+      +column_types:
+        company_name: text
+        ticker: text
 
 snapshots:
   dadayu_warehouse:
